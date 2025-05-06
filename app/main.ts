@@ -1,12 +1,7 @@
 import net from "net";
-import { KafkaRequest } from "../kafka_request";
-
-// You can use print statements as follows for debugging, they'll be visible when running tests.
-// console.log("Logs from your program will appear here!");
-
-const toInt32 = (num: number) => {
-  return num | 0;
-};
+import { KafkaRequest } from "./kafka_request";
+import { KafkaResponse } from "./kafka_response";
+import { ErrorCode } from "./consts";
 
 // Uncomment this block to pass the first stage
 const server: net.Server = net.createServer((connection: net.Socket) => {
@@ -15,14 +10,14 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     const request = KafkaRequest.fromBuffer(data);
     request.debug();
 
-    const messageSize = 0;
-    const messageSizeBuffer = Buffer.alloc(4);
-    messageSizeBuffer.writeUInt32BE(messageSize, 0);
-    const correlationId = request.correllationId;
-    const correlationIdBuffer = Buffer.alloc(4);
-    correlationIdBuffer.writeUInt32BE(correlationId, 0);
-    const response = Buffer.concat([messageSizeBuffer, correlationIdBuffer]);
-    connection.write(response);
+    const errorCode =
+      request.requestApiVersion < 0 || request.requestApiVersion > 4
+        ? ErrorCode.UNSUPPORTED_VERSION
+        : 0;
+
+    const response = new KafkaResponse(request.correllationId, errorCode);
+
+    connection.write(response.toBuffer());
   });
 });
 
