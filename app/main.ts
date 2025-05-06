@@ -1,4 +1,5 @@
 import net from "net";
+import { KafkaRequest } from "../kafka_request";
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 // console.log("Logs from your program will appear here!");
@@ -11,15 +12,16 @@ const toInt32 = (num: number) => {
 const server: net.Server = net.createServer((connection: net.Socket) => {
   // Handle connection
   connection.on("data", (data: Buffer) => {
+    const request = KafkaRequest.fromBuffer(data);
+    request.debug();
+
     const messageSize = 0;
     const messageSizeBuffer = Buffer.alloc(4);
     messageSizeBuffer.writeUInt32BE(messageSize, 0);
-    console.log("messageSizeBuffer: ", messageSizeBuffer);
-    const correlationId = 7;
+    const correlationId = request.correllationId;
     const correlationIdBuffer = Buffer.alloc(4);
-    messageSizeBuffer.writeUInt32BE(correlationId, 0);
-    const response = Buffer.concat([correlationIdBuffer, messageSizeBuffer]);
-    console.log(response);
+    correlationIdBuffer.writeUInt32BE(correlationId, 0);
+    const response = Buffer.concat([messageSizeBuffer, correlationIdBuffer]);
     connection.write(response);
   });
 });
