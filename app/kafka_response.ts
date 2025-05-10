@@ -137,8 +137,18 @@ class KafkaApiVersionsResponseBody {
         this.apiVersionsArray = new KafkaApiVerionsArrayBody([]);
         break;
       case ResponseType.API_VERSIONS:
+      case ResponseType.DESCRIBE_TOPIC_PARTITIONS:
         const apiVersionItem = new KafkaApiVersionItemBody(18, 0, 4, 0);
-        this.apiVersionsArray = new KafkaApiVerionsArrayBody([apiVersionItem]);
+        const describeTopicPartitionsItem = new KafkaApiVersionItemBody(
+          75,
+          0,
+          0,
+          0,
+        );
+        this.apiVersionsArray = new KafkaApiVerionsArrayBody([
+          apiVersionItem,
+          describeTopicPartitionsItem,
+        ]);
         break;
       default:
         throw "Unsupported API key";

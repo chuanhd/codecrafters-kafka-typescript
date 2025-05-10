@@ -6,4 +6,5 @@ export const enum ErrorCode {
 export const enum ResponseType {
   NONE = 0,
   API_VERSIONS = 18,
+  DESCRIBE_TOPIC_PARTITIONS = 75,
 }
