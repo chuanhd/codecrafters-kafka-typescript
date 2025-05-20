@@ -1,3 +1,5 @@
+import { ResponseType } from "./consts";
+
 class KafkaRequestHeaderClientID {
   length: number;
   content: string;
@@ -9,12 +11,12 @@ class KafkaRequestHeaderClientID {
 
   public debug() {
     console.log(
-      `[RequestHeaderClientID] length: ${this.length} - content: ${this.content}`,
+      `[RequestHeaderClientID] length: ${this.length} - content: ${this.content}`
     );
   }
 }
 
-class KafkafRequestHeader {
+class KafkaRequestHeader {
   apiKey: number;
   apiVersion: number;
   correlationId: number;
@@ -27,21 +29,25 @@ class KafkafRequestHeader {
     correlationId: number,
     clientIdLength: number,
     clientIdContent: string,
-    tagBuffer: number,
+    tagBuffer: number
   ) {
     this.apiKey = apiKey;
     this.apiVersion = apiVersion;
     this.correlationId = correlationId;
     this.clientId = new KafkaRequestHeaderClientID(
       clientIdLength,
-      clientIdContent,
+      clientIdContent
     );
     this.tagBuffer = tagBuffer;
   }
 
   public debug() {
     console.log(
-      `[RequestHeader] apiKey: ${this.apiKey} apiVersion: ${this.apiVersion} correlationId: ${this.correlationId} clientId: ${this.clientId.debug()} tagBuffer: ${this.tagBuffer}`,
+      `[RequestHeader] apiKey: ${this.apiKey} apiVersion: ${
+        this.apiVersion
+      } correlationId: ${
+        this.correlationId
+      } clientId: ${this.clientId.debug()} tagBuffer: ${this.tagBuffer}`
     );
   }
 }
@@ -59,14 +65,88 @@ class KafkaRequestTopic {
 
   public debug() {
     console.log(
-      `[RequestTopic] topicNameLength: ${this.topicNameLength} topicName: ${this.topicName} tagBuffer: ${this.tagBuffer}`,
+      `[RequestTopic] topicNameLength: ${this.topicNameLength} topicName: ${this.topicName} tagBuffer: ${this.tagBuffer}`
     );
+  }
+}
+
+class KafkaRequestTopicPartition {
+  topics: KafkaRequestTopic[];
+  responsePartitionLimit: number;
+  cursor: number;
+  tagBuffer: number;
+
+  constructor(
+    topics: KafkaRequestTopic[],
+    responsePartitionLimit: number,
+    cursor: number,
+    tagBuffer: number
+  ) {
+    this.topics = topics;
+    this.responsePartitionLimit = responsePartitionLimit;
+    this.cursor = cursor;
+    this.tagBuffer = tagBuffer;
+  }
+
+  public static fromBuffer(data: Buffer, currentOffset: number) {
+    // Read content of DescribeTopicPartitionsRequest body
+    // Read topic array section
+    // Next 1 byte is topic array length
+    const topicArrayLength = data.readUInt8(currentOffset);
+    currentOffset += 1;
+    console.log("topicArrayLength: ", topicArrayLength);
+
+    let readTopicArray: Array<KafkaRequestTopic> = [];
+    let remainingTopicToRead = topicArrayLength - 1;
+    while (remainingTopicToRead > 0) {
+      const topicNameLength = data.readUInt8(currentOffset) - 1;
+      currentOffset += 1;
+      console.log("topicNameLength: ", topicNameLength);
+      const topicName = data.toString(
+        "utf-8",
+        currentOffset,
+        currentOffset + topicNameLength
+      );
+      currentOffset += topicNameLength;
+      console.log("topicName: ", topicName);
+      const topicTagBuffer = data.readUInt8(currentOffset);
+      currentOffset += 1;
+      console.log("topicTagBuffer: ", topicTagBuffer);
+
+      const topic = new KafkaRequestTopic(
+        topicNameLength,
+        topicName,
+        topicTagBuffer
+      );
+      readTopicArray.push(topic);
+
+      // Reduce remainingTopicToRead by 1
+      remainingTopicToRead -= 1;
+    }
+
+    const responsePartitionLimit = data.readUInt32BE(currentOffset);
+    currentOffset += 4;
+
+    const cursor = data.readUInt8(currentOffset);
+    currentOffset += 1;
+
+    const tagBuffer = data.readUInt8(currentOffset);
+    currentOffset += 1;
+
+    const body = new KafkaRequestTopicPartition(
+      readTopicArray,
+      responsePartitionLimit,
+      cursor,
+      tagBuffer
+    );
+
+    return body;
   }
 }
 
 export class KafkaRequest {
   messageSize: number;
-  header: KafkafRequestHeader;
+  header: KafkaRequestHeader;
   topics: KafkaRequestTopic[];
   responsePartitionLimit: number;
   cursor: number;
@@ -74,11 +154,11 @@ export class KafkaRequest {
 
   constructor(
     _messageSize: number,
-    _header: KafkafRequestHeader,
+    _header: KafkaRequestHeader,
     _topics: KafkaRequestTopic[],
     _responsePartitionLimit: number,
     _cursor: number,
-    _tagBuffer: number,
+    _tagBuffer: number
   ) {
     this.messageSize = _messageSize;
     this.header = _header;
@@ -116,7 +196,7 @@ export class KafkaRequest {
     const clientIdContent = data.toString(
       "utf-8",
       currentOffset,
-      currentOffset + clientIdLength,
+      currentOffset + clientIdLength
     );
     currentOffset += clientIdLength;
     console.log("clientIdContent: ", clientIdContent);
@@ -125,14 +205,47 @@ export class KafkaRequest {
     currentOffset += 1;
     console.log("headerTagBuffer: ", headerTagBuffer);
 
-    const header = new KafkafRequestHeader(
+    const header = new KafkaRequestHeader(
       requestApiKey,
       requestApiVersion,
       correlationId,
       clientIdLength,
       clientIdContent,
-      headerTagBuffer,
+      headerTagBuffer
     );
+
+    if (requestApiKey === ResponseType.API_VERSIONS) {
+      console.log("API_VERSIONS request");
+
+      const clientIdLength = data.readUInt8(currentOffset) - 1;
+      currentOffset += 1;
+      console.log("[Body] clientIdLength: ", clientIdLength);
+
+      const clientIdContent = data.toString(
+        "utf-8",
+        currentOffset,
+        currentOffset + clientIdLength
+      );
+      currentOffset += clientIdLength;
+      console.log("[Body] clientIdContent: ", clientIdContent);
+
+      const clientSoftwareVersionLength = data.readUInt8(currentOffset) - 1;
+      currentOffset += 1;
+      console.log(
+        "[Body] clientSoftwareVersionLength: ",
+        clientSoftwareVersionLength
+      );
+
+      const clientSoftwareVersion = data.toString(
+        "utf-8",
+        currentOffset,
+        currentOffset + clientSoftwareVersionLength
+      );
+      currentOffset += clientSoftwareVersionLength;
+      console.log("[Body] clientSoftwareVersion: ", clientSoftwareVersion);
+
+      return new KafkaRequest(messageSize, header, [], 0, 0, 0);
+    }
 
     // Read content of DescribeTopicPartitionsRequest body
     // Read topic array section
@@ -150,7 +263,7 @@ export class KafkaRequest {
       const topicName = data.toString(
         "utf-8",
         currentOffset,
-        currentOffset + topicNameLength,
+        currentOffset + topicNameLength
       );
       currentOffset += topicNameLength;
       console.log("topicName: ", topicName);
@@ -161,7 +274,7 @@ export class KafkaRequest {
       const topic = new KafkaRequestTopic(
         topicNameLength,
         topicName,
-        topicTagBuffer,
+        topicTagBuffer
       );
       readTopicArray.push(topic);
 
@@ -184,7 +297,7 @@ export class KafkaRequest {
       readTopicArray,
       responsePartitionLimit,
       cursor,
-      tagBuffer,
+      tagBuffer
     );
 
     return request;
@@ -198,9 +311,10 @@ export class KafkaRequest {
       topic.debug();
     }
     console.log(
-      `[Request] responsePartitionLimit: ${this.responsePartitionLimit}`,
+      `[Request] responsePartitionLimit: ${this.responsePartitionLimit}`
     );
     console.log(`[Request] cursor: ${this.cursor}`);
     console.log(`[Request] tagBuffer: ${this.tagBuffer}`);
+    console.log(`***End of DEBUG REQUEST***`);
   }
 }

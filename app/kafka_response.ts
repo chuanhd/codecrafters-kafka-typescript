@@ -2,22 +2,23 @@ import { KafkaApiVersionsResponseBody } from "./kafka_api_version_resp.ts";
 import { type IResponseBufferSerializable } from "./interface_buffer_serializable.ts";
 
 class KafkaResponseHeader implements IResponseBufferSerializable {
-  correlationId: number;
-  tagBuffer: number;
-
-  constructor(correlationId: number) {
-    this.correlationId = correlationId;
-    this.tagBuffer = 0;
-  }
+  constructor(
+    public correlationId: number,
+    public tagBuffer: number | undefined = undefined
+  ) {}
 
   public getBufferSize() {
-    return 4 + 1;
+    const tagBufferSize = this.tagBuffer !== undefined ? 1 : 0;
+    return 4 + tagBufferSize; // 4 bytes for correlationId + 1 byte for tagBuffer if exists
   }
 
   public toBuffer() {
     const buffer = Buffer.alloc(4);
     buffer.writeUInt32BE(this.correlationId);
 
+    if (this.tagBuffer === undefined) {
+      return buffer;
+    }
     const tagBuffer = Buffer.alloc(1);
     tagBuffer.writeUInt8(this.tagBuffer);
 
@@ -29,8 +30,12 @@ export class KafkaResponse {
   header: KafkaResponseHeader;
   body: IResponseBufferSerializable;
 
-  constructor(correlationId: number, body: IResponseBufferSerializable) {
-    this.header = new KafkaResponseHeader(correlationId);
+  constructor(
+    correlationId: number,
+    tagBuffer: number | undefined,
+    body: IResponseBufferSerializable
+  ) {
+    this.header = new KafkaResponseHeader(correlationId, tagBuffer);
     this.body = body;
   }
 
@@ -39,7 +44,10 @@ export class KafkaResponse {
     const messageSizeBufferSize = 4; // 32 bits = 4 bytes
     const messageSizeBuffer = Buffer.alloc(messageSizeBufferSize);
     const messageSize = this.header.getBufferSize() + this.body.getBufferSize();
-    console.log("[Response] mesageSize: ", messageSize);
+    console.log(
+      `header size: ${this.header.getBufferSize()} - body size: ${this.body.getBufferSize()}`
+    );
+    console.log("[Response] messageSize: ", messageSize);
     messageSizeBuffer.writeUInt32BE(messageSize);
 
     return Buffer.concat([

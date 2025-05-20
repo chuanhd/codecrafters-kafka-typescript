@@ -25,11 +25,12 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           const body = new KafkaApiVersionsResponseBody(
             errorCode,
             request.header.apiKey,
-            request.header.apiVersion,
+            request.header.apiVersion
           );
           const response = new KafkaResponse(
             request.header.correlationId,
-            body,
+            undefined,
+            body
           );
 
           connection.write(response.toBuffer());
@@ -42,18 +43,19 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           const topic = new KafkaDescribeTopicPartitionsTopicItem(
             errorCode,
             firstRequestTopic.topicName,
-            "0",
+            "",
             false,
+            1,
             0,
-            0,
-            0,
+            0
           );
           const body = new KafkaDescribeTopicPartitionsRespBody(0, 0, 0, [
             topic,
           ]);
           const response = new KafkaResponse(
             request.header.correlationId,
-            body,
+            0,
+            body
           );
 
           connection.write(response.toBuffer());

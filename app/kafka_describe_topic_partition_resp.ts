@@ -104,7 +104,7 @@ export class KafkaDescribeTopicPartitionsTopicItem
     partitionsArrayLengthBuffer.writeUInt8(this.partitionsArrayLength);
 
     const topicAuthorizedOpBuffer = Buffer.alloc(TopicAuthorizedOpBufferSize);
-    topicAuthorizedOpBuffer.writeUInt8(this.topicAuthorizedOp);
+    topicAuthorizedOpBuffer.writeUInt32BE(this.topicAuthorizedOp);
 
     const tagBufferBuffer = Buffer.alloc(TagBufferBufferSize);
     tagBufferBuffer.writeUInt8(this.tagBuffer);
@@ -168,7 +168,7 @@ export class KafkaDescribeTopicPartitionsRespBody
     const topicBuffers = this.topics.map((e) => e.toBuffer());
 
     const cursorBuffer = Buffer.alloc(CursorBufferSize);
-    cursorBuffer.writeUInt8(this.nextCursor);
+    cursorBuffer.writeUInt8(255);
 
     const tagBufferBuffer = Buffer.alloc(TagBufferBufferSize);
     tagBufferBuffer.writeUInt8(this.tagBuffer);
