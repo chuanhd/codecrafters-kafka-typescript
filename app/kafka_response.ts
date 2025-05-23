@@ -40,14 +40,16 @@ export class KafkaResponse {
   }
 
   public toBuffer() {
+    const headerBuffer = this.header.toBuffer();
+    const bodyBuffer = this.body.toBuffer();
+
     // Buffer size of `messageSize` value
     const messageSizeBufferSize = 4; // 32 bits = 4 bytes
     const messageSizeBuffer = Buffer.alloc(messageSizeBufferSize);
-    const messageSize = this.header.getBufferSize() + this.body.getBufferSize();
+    const messageSize = bodyBuffer.length + headerBuffer.length;
     console.log(
-      `header size: ${this.header.getBufferSize()} - body size: ${this.body.getBufferSize()}`
+      `[Response]  header size: ${headerBuffer.length} - body size: ${bodyBuffer.length} - total size: ${messageSize}`
     );
-    console.log("[Response] messageSize: ", messageSize);
     messageSizeBuffer.writeUInt32BE(messageSize);
 
     return Buffer.concat([

@@ -1,4 +1,5 @@
 import { type IResponseBufferSerializable } from "./interface_buffer_serializable.ts";
+import type { KafkaTopicPartitionItemResp } from "./models/kafka_topic_partition_item_resp.ts";
 
 const TagBufferBufferSize = 1; // 1 byte
 const CorrelationIdBufferSize = 4; // 4 bytes
@@ -43,44 +44,46 @@ export class KafkaDescribeTopicPartitionsTopicItem
   errorCode: number;
   topicNameLength: number;
   topicName: string;
-  topicId: string;
+  topicId: Buffer;
   isInternal: boolean;
   partitionsArrayLength: number;
+  partitions: KafkaTopicPartitionItemResp[];
   topicAuthorizedOp: number;
   tagBuffer: number;
 
   constructor(
     errorCode: number,
     topicName: string,
-    topicId: string,
+    topicId: Buffer,
     isInternal: boolean,
-    partitionArrayLength: number,
+    partitions: KafkaTopicPartitionItemResp[],
     topicAuthorizedOp: number,
-    tagBuffer: number,
+    tagBuffer: number
   ) {
     this.errorCode = errorCode;
     this.topicNameLength = topicName.length;
     this.topicName = topicName;
     this.topicId = topicId;
     this.isInternal = isInternal;
-    this.partitionsArrayLength = partitionArrayLength;
+    this.partitions = partitions;
+    this.partitionsArrayLength = partitions.length + 1; // +1 for the length byte
     this.topicAuthorizedOp = topicAuthorizedOp;
     this.tagBuffer = tagBuffer;
   }
 
-  getBufferSize(): number {
-    const topicNameBufferSize = this.topicNameLength;
-    return (
-      ErrorCodeBufferSize +
-      TopicNameLengthBufferSize +
-      topicNameBufferSize +
-      TopicIdBufferSize +
-      IsInternalBufferSize +
-      PartitionsArrayLengthBufferSize +
-      TopicAuthorizedOpBufferSize +
-      TagBufferBufferSize
-    );
-  }
+  // getBufferSize(): number {
+  //   const topicNameBufferSize = this.topicNameLength;
+  //   return (
+  //     ErrorCodeBufferSize +
+  //     TopicNameLengthBufferSize +
+  //     topicNameBufferSize +
+  //     TopicIdBufferSize +
+  //     IsInternalBufferSize +
+  //     PartitionsArrayLengthBufferSize +
+  //     TopicAuthorizedOpBufferSize +
+  //     TagBufferBufferSize
+  //   );
+  // }
 
   toBuffer(): Buffer {
     const errorCodeBuffer = Buffer.alloc(ErrorCodeBufferSize);
@@ -92,16 +95,20 @@ export class KafkaDescribeTopicPartitionsTopicItem
     const topicNameBuffer = Buffer.alloc(this.topicNameLength);
     topicNameBuffer.write(this.topicName, "utf-8");
 
-    const topicIdBuffer = Buffer.alloc(TopicIdBufferSize);
-    topicIdBuffer.write(this.topicId, "utf-8");
-
     const isInternalBuffer = Buffer.alloc(IsInternalBufferSize);
     isInternalBuffer.writeUInt8(this.isInternal ? 1 : 0);
 
     const partitionsArrayLengthBuffer = Buffer.alloc(
-      PartitionsArrayLengthBufferSize,
+      PartitionsArrayLengthBufferSize
     );
     partitionsArrayLengthBuffer.writeUInt8(this.partitionsArrayLength);
+
+    // Serialize partitions
+    const partitionsBuffers = this.partitions.map((partition) =>
+      partition.toBuffer()
+    );
+    const partitionsBuffer = Buffer.concat(partitionsBuffers);
+    console.log(`partitionsBuffer size: ${partitionsBuffer.length}`);
 
     const topicAuthorizedOpBuffer = Buffer.alloc(TopicAuthorizedOpBufferSize);
     topicAuthorizedOpBuffer.writeUInt32BE(this.topicAuthorizedOp);
@@ -113,9 +120,10 @@ export class KafkaDescribeTopicPartitionsTopicItem
       errorCodeBuffer,
       topicNameLengthBuffer,
       topicNameBuffer,
-      topicIdBuffer,
+      this.topicId,
       isInternalBuffer,
       partitionsArrayLengthBuffer,
+      partitionsBuffer,
       topicAuthorizedOpBuffer,
       tagBufferBuffer,
     ]);
@@ -135,7 +143,7 @@ export class KafkaDescribeTopicPartitionsRespBody
     throttleTime: number,
     nextCursor: number,
     tagBuffer: number,
-    topics: Array<KafkaDescribeTopicPartitionsTopicItem>,
+    topics: Array<KafkaDescribeTopicPartitionsTopicItem>
   ) {
     this.topics = topics;
     this.topicsLength = this.topics.length + 1;
@@ -144,19 +152,19 @@ export class KafkaDescribeTopicPartitionsRespBody
     this.tagBuffer = tagBuffer;
   }
 
-  getBufferSize(): number {
-    const topicsBufferSize = this.topics.reduce((prev, curVal) => {
-      return prev + curVal.getBufferSize();
-    }, 0);
+  // getBufferSize(): number {
+  //   const topicsBufferSize = this.topics.reduce((prev, curVal) => {
+  //     return prev + curVal.getBufferSize();
+  //   }, 0);
 
-    return (
-      ThrottleTimeBufferSize +
-      TopicArrayLengthBufferSize +
-      topicsBufferSize +
-      NextCursorBufferSize +
-      TagBufferBufferSize
-    );
-  }
+  //   return (
+  //     ThrottleTimeBufferSize +
+  //     TopicArrayLengthBufferSize +
+  //     topicsBufferSize +
+  //     NextCursorBufferSize +
+  //     TagBufferBufferSize
+  //   );
+  // }
 
   toBuffer(): Buffer {
     const throttleTimeBuffer = Buffer.alloc(ThrottleTimeBufferSize);
