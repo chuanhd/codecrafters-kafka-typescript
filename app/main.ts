@@ -53,40 +53,49 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           const topicRecords = metadataLogFile.getTopicRecords();
           console.log(`topicRecords: ${topicRecords.length}`);
 
-          const firstRequestTopic = request.topics[0];
+          // const firstRequestTopic = request.topics[0];
 
-          const matchTopicRecord = topicRecords.find((record) => {
-            // console.log(`record: ${record.debugString()}`);
-            return record.name === firstRequestTopic.topicName;
+          const topics = request.topics.map((topicReq) => {
+            const matchingTopicRecord = topicRecords.find(
+              (topicRecord) => topicRecord.name === topicReq.topicName
+            );
+
+            const errorCode =
+              matchingTopicRecord !== undefined
+                ? ErrorCode.NO_ERROR
+                : ErrorCode.UNKNOWN_TOPIC_OR_PARTITION;
+
+            const topicId = matchingTopicRecord?.uuid ?? Buffer.alloc(16);
+
+            const partitionRecords =
+              metadataLogFile.getPartitionRecordsMatchTopicUuid(topicId);
+            const partitionRecordsResponse = partitionRecords.map(
+              (partitionRecord, index) =>
+                KafkaTopicPartitionItemResp.fromLogRecord(
+                  partitionRecord,
+                  index
+                )
+            );
+
+            const topic = new KafkaDescribeTopicPartitionsTopicItem(
+              errorCode,
+              topicReq.topicName,
+              topicId,
+              false,
+              partitionRecordsResponse,
+              0,
+              0
+            );
+
+            return topic;
           });
 
-          const errorCode =
-            matchTopicRecord !== undefined
-              ? ErrorCode.NO_ERROR
-              : ErrorCode.UNKNOWN_TOPIC_OR_PARTITION;
-
-          const topicId = matchTopicRecord?.uuid ?? Buffer.alloc(16);
-
-          const partitionRecords =
-            metadataLogFile.getPartitionRecordsMatchTopicUuid(topicId);
-          const partitionRecordsResponse = partitionRecords.map(
-            (partitionRecord, index) =>
-              KafkaTopicPartitionItemResp.fromLogRecord(partitionRecord, index)
-          );
-
-          const topic = new KafkaDescribeTopicPartitionsTopicItem(
-            errorCode,
-            firstRequestTopic.topicName,
-            topicId,
-            false,
-            partitionRecordsResponse,
+          const body = new KafkaDescribeTopicPartitionsRespBody(
             0,
-            0
+            0,
+            0,
+            topics
           );
-
-          const body = new KafkaDescribeTopicPartitionsRespBody(0, 0, 0, [
-            topic,
-          ]);
           const response = new KafkaResponse(
             request.header.correlationId,
             0,
