@@ -1,4 +1,3 @@
-import { KafkaApiVersionsResponseBody } from "./kafka_api_version_resp.ts";
 import { type IResponseBufferSerializable } from "./interface_buffer_serializable.ts";
 
 class KafkaResponseHeader implements IResponseBufferSerializable {

@@ -9,15 +9,11 @@ import {
 } from "./kafka_describe_topic_partition_resp";
 import { KafkaClusterMetadataLogFile } from "./models/kafka_cluster_metadata_log_file";
 import { KafkaTopicPartitionItemResp } from "./models/kafka_topic_partition_item_resp";
+import { KafkaFetchResponseBody } from "./models/kafka_fetch_resp_body";
 
 const server: net.Server = net.createServer((connection: net.Socket) => {
   // Handle connection
   connection.on("data", (data: Buffer) => {
-    // const args = process.argv.slice(2);
-    // console.log("args: ", args);
-    // const [metadataLogFilePath] = args;
-    // console.log("metadataLogFilePath: ", metadataLogFilePath);
-
     const request = KafkaRequest.fromBuffer(data);
     request.debug();
 
@@ -49,11 +45,8 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           const metadataLogFile = KafkaClusterMetadataLogFile.fromFile(
             "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log"
           );
-          // console.log("metadataLogFile: ", metadataLogFile.debugString());
           const topicRecords = metadataLogFile.getTopicRecords();
           console.log(`topicRecords: ${topicRecords.length}`);
-
-          // const firstRequestTopic = request.topics[0];
 
           const topics = request.topics.map((topicReq) => {
             const matchingTopicRecord = topicRecords.find(
@@ -95,6 +88,24 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             0,
             0,
             topics
+          );
+          const response = new KafkaResponse(
+            request.header.correlationId,
+            0,
+            body
+          );
+
+          connection.write(response.toBuffer());
+        }
+        break;
+      case ResponseType.FETCH:
+        {
+          // Handle fetch request
+          const errorCode = ErrorCode.NO_ERROR;
+          const body = new KafkaFetchResponseBody(
+            0, // throttleTime
+            errorCode, // errorCode
+            0 // sessionId
           );
           const response = new KafkaResponse(
             request.header.correlationId,
