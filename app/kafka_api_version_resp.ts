@@ -128,9 +128,11 @@ export class KafkaApiVersionsResponseBody {
             0,
             0
           );
+          const fetchItem = new KafkaApiVersionItemBody(1, 0, 16, 0);
           this.apiVersionsArray = new KafkaApiVersionsArrayBody([
             apiVersionItem,
             describeTopicPartitionsItem,
+            fetchItem,
           ]);
         }
         break;
