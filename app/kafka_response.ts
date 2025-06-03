@@ -1,4 +1,5 @@
 import { type IResponseBufferSerializable } from "./interface_buffer_serializable.ts";
+import { writeVarInt } from "./utils/utils.ts";
 
 class KafkaResponseHeader implements IResponseBufferSerializable {
   constructor(

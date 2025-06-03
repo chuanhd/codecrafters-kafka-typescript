@@ -1,5 +1,4 @@
 import { KafkaClusterMetadataPartitionRecord } from "./kafka_cluster_metadata_partition_record";
-import { write } from "bun";
 import type { IResponseBufferSerializable } from "../interface_buffer_serializable";
 import { writeVarInt } from "../utils/utils";
 import { ErrorCode } from "../consts";
@@ -8,15 +7,10 @@ const ErrorCodeBufferSize = 2; // 2 bytes
 const PartitionIndexBufferSize = 4; // 4 bytes
 const LeaderIdBufferSize = 4; // 4 bytes
 const LeaderEpochBufferSize = 4; // 4 bytes
-const ReplicasArrayLengthBufferSize = 1; // 1 byte
 const ReplicasArrayItemBufferSize = 4; // 4 bytes
-const IsrArrayLengthBufferSize = 1; // 1 byte
 const IsrArrayItemBufferSize = 4; // 4 bytes
-const EligibleReplicasArrayLengthBufferSize = 1; // 1 byte
 const EligibleReplicasArrayItemBufferSize = 4; // 4 bytes
-const LastKnownELRArrayLengthBufferSize = 1; // 1 byte
 const LastKnownELRArrayItemBufferSize = 4; // 4 bytes
-const OfflineReplicasArrayLengthBufferSize = 1; // 1 byte
 const OfflineReplicasArrayItemBufferSize = 4; // 4 bytes
 const TagBufferBufferSize = 1; // 1 byte
 

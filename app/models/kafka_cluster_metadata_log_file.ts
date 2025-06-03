@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import { KafkaClusterMetadataTopicRecord } from "./kafka_cluster_metadata_topic_record";
 import { KafkaClusterMetadataPartitionRecord } from "./kafka_cluster_metadata_partition_record";
-import { readVarInt } from "../utils/utils";
+import { readSignedVarInt } from "../utils/utils";
 import { KafkaClusterMetadataFeatureLevelRecord } from "./kafka_cluster_metadata_feature_level_record";
 
 export class KafkaClusterMetadataRecordBatchItem {
@@ -127,12 +127,12 @@ export class KafkaClusterMetadataRecordBatch {
 
     for (let i = 0; i < recordCount; i++) {
       // console.log(`Reading record batch item ${i} at offset ${currentOffset}`);
-      const { value: recordLength, length: recordLengthSize } = readVarInt(
+      const { value: recordLength, length: recordLengthSize } = readSignedVarInt(
         buffer.subarray(currentOffset, currentOffset + 4)
       );
-      // console.log(
-      //   `Record ${i}: length: ${recordLength} - recordLengthSize: ${recordLengthSize}`
-      // );
+      console.log(
+        `Record ${i}: length: ${recordLength} - recordLengthSize: ${recordLengthSize}`
+      );
       currentOffset += recordLengthSize;
 
       const attributes = buffer.readUInt8(currentOffset);
@@ -147,22 +147,22 @@ export class KafkaClusterMetadataRecordBatch {
       // console.log(`Record ${i}: offsetDelta: ${offsetDelta}`);
       currentOffset += 1;
 
-      const { value: keyLength, length: keyLengthSize } = readVarInt(
+      const { value: keyLength, length: keyLengthSize } = readSignedVarInt(
         buffer.subarray(currentOffset, currentOffset + 4)
       );
-      // console.log(
-      //   `Record ${i}: keyLength: ${keyLength} - keyLengthSize: ${keyLengthSize}`
-      // );
+      console.log(
+        `Record ${i}: keyLength: ${keyLength} - keyLengthSize: ${keyLengthSize}`
+      );
       currentOffset += keyLengthSize;
 
       const key = null;
 
-      const { value: valueLength, length: valueLengthSize } = readVarInt(
+      const { value: valueLength, length: valueLengthSize } = readSignedVarInt(
         buffer.subarray(currentOffset, currentOffset + 4)
       );
-      // console.log(
-      //   `Record ${i}: valueLength: ${valueLength} - valueLengthSize: ${valueLengthSize}`
-      // );
+      console.log(
+        `Record ${i}: valueLength: ${valueLength} - valueLengthSize: ${valueLengthSize}`
+      );
       currentOffset += valueLengthSize;
 
       const value = buffer.subarray(currentOffset, currentOffset + valueLength);

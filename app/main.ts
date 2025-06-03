@@ -1,5 +1,5 @@
+import { KafkaDescribePartitionRequest } from "./models/kafka_describe_partition_req";
 import net from "net";
-import { KafkaRequest } from "./kafka_request";
 import { KafkaResponse } from "./kafka_response";
 import { ErrorCode, ResponseType } from "./consts";
 import { KafkaApiVersionsResponseBody } from "./kafka_api_version_resp";
@@ -10,15 +10,18 @@ import {
 import { KafkaClusterMetadataLogFile } from "./models/kafka_cluster_metadata_log_file";
 import { KafkaTopicPartitionItemResp } from "./models/kafka_topic_partition_item_resp";
 import { KafkaFetchResponseBody } from "./models/kafka_fetch_resp_body";
+import { KafkaFetchTopicPartitionItemResp } from "./models/kafka_fetch_topic_partition_item_resp";
+import { KafkaRequestHeader } from "./models/kafka_request_header";
+import { KafkaFetchRequest } from "./models/kafka_fetch_request";
+import { KafkaFetchTopicItemResp } from "./models/kafka_fetch_topic_item_resp";
 
 const server: net.Server = net.createServer((connection: net.Socket) => {
   // Handle connection
   connection.on("data", (data: Buffer) => {
-    const request = KafkaRequest.fromBuffer(data);
-    request.debug();
+    const header = KafkaRequestHeader.fromBuffer(data.subarray(4));
 
-    const apiVersion = request.header.apiVersion;
-    switch (request.header.apiKey) {
+    const apiVersion = header.apiVersion;
+    switch (header.apiKey) {
       case ResponseType.API_VERSIONS:
         {
           const errorCode =
@@ -27,11 +30,11 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
               : ErrorCode.NO_ERROR;
           const body = new KafkaApiVersionsResponseBody(
             errorCode,
-            request.header.apiKey,
-            request.header.apiVersion
+            header.apiKey,
+            header.apiVersion
           );
           const response = new KafkaResponse(
-            request.header.correlationId,
+            header.correlationId,
             undefined,
             body
           );
@@ -41,6 +44,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         break;
       case ResponseType.DESCRIBE_TOPIC_PARTITIONS:
         {
+          const request = KafkaDescribePartitionRequest.fromBuffer(data);
           // Read content of metadata log file to KafkaClusterMetadataLogFile
           const metadataLogFile = KafkaClusterMetadataLogFile.fromFile(
             "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log"
@@ -101,11 +105,23 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
       case ResponseType.FETCH:
         {
           // Handle fetch request
+          const request = KafkaFetchRequest.fromBuffer(data);
           const errorCode = ErrorCode.NO_ERROR;
+          const topicsInResponse = request.topics.map((topic) => {
+            const partitions = topic.partitions.map(
+              (_partition, index) =>
+                new KafkaFetchTopicPartitionItemResp(index, 100) // Assuming 100 as the error code
+            );
+            return new KafkaFetchTopicItemResp(
+              topic.topicId, // topicId
+              partitions
+            );
+          });
           const body = new KafkaFetchResponseBody(
             0, // throttleTime
             errorCode, // errorCode
-            0 // sessionId
+            0, // sessionId
+            topicsInResponse
           );
           const response = new KafkaResponse(
             request.header.correlationId,

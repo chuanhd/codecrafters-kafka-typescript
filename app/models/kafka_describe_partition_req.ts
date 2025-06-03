@@ -1,56 +1,5 @@
-import { ResponseType } from "./consts";
-
-class KafkaRequestHeaderClientID {
-  length: number;
-  content: string;
-
-  constructor(length: number, content: string) {
-    this.length = length;
-    this.content = content;
-  }
-
-  public debug() {
-    console.log(
-      `[RequestHeaderClientID] length: ${this.length} - content: ${this.content}`
-    );
-  }
-}
-
-class KafkaRequestHeader {
-  apiKey: number;
-  apiVersion: number;
-  correlationId: number;
-  clientId: KafkaRequestHeaderClientID;
-  tagBuffer: number;
-
-  constructor(
-    apiKey: number,
-    apiVersion: number,
-    correlationId: number,
-    clientIdLength: number,
-    clientIdContent: string,
-    tagBuffer: number
-  ) {
-    this.apiKey = apiKey;
-    this.apiVersion = apiVersion;
-    this.correlationId = correlationId;
-    this.clientId = new KafkaRequestHeaderClientID(
-      clientIdLength,
-      clientIdContent
-    );
-    this.tagBuffer = tagBuffer;
-  }
-
-  public debug() {
-    console.log(
-      `[RequestHeader] apiKey: ${this.apiKey} apiVersion: ${
-        this.apiVersion
-      } correlationId: ${
-        this.correlationId
-      } clientId: ${this.clientId.debug()} tagBuffer: ${this.tagBuffer}`
-    );
-  }
-}
+import { ResponseType } from "../consts";
+import { KafkaRequestHeader } from "./kafka_request_header";
 
 class KafkaRequestTopic {
   topicNameLength: number;
@@ -70,7 +19,7 @@ class KafkaRequestTopic {
   }
 }
 
-export class KafkaRequest {
+export class KafkaDescribePartitionRequest {
   messageSize: number;
   header: KafkaRequestHeader;
   topics: KafkaRequestTopic[];
@@ -170,70 +119,80 @@ export class KafkaRequest {
       currentOffset += clientSoftwareVersionLength;
       console.log("[Body] clientSoftwareVersion: ", clientSoftwareVersion);
 
-      return new KafkaRequest(messageSize, header, [], 0, 0, 0);
-    }
-
-    // Read content of DescribeTopicPartitionsRequest body
-    // Read topic array section
-    // Next 1 byte is topic array length
-    const topicArrayLength = data.readUInt8(currentOffset);
-    currentOffset += 1;
-    console.log("topicArrayLength: ", topicArrayLength);
-
-    let readTopicArray: Array<KafkaRequestTopic> = [];
-    let remainingTopicToRead = topicArrayLength - 1;
-    while (remainingTopicToRead > 0) {
-      const topicNameLength = data.readUInt8(currentOffset) - 1;
-      currentOffset += 1;
-      console.log("topicNameLength: ", topicNameLength);
-      const topicName = data.toString(
-        "utf-8",
-        currentOffset,
-        currentOffset + topicNameLength
+      return new KafkaDescribePartitionRequest(
+        messageSize,
+        header,
+        [],
+        0,
+        0,
+        0
       );
-      currentOffset += topicNameLength;
-      console.log("topicName: ", topicName);
-      const topicTagBuffer = data.readUInt8(currentOffset);
+    } else if (requestApiKey === ResponseType.DESCRIBE_TOPIC_PARTITIONS) {
+      // Read content of DescribeTopicPartitionsRequest body
+      // Read topic array section
+      // Next 1 byte is topic array length
+      const topicArrayLength = data.readUInt8(currentOffset);
       currentOffset += 1;
-      console.log("topicTagBuffer: ", topicTagBuffer);
+      console.log("topicArrayLength: ", topicArrayLength);
 
-      const topic = new KafkaRequestTopic(
-        topicNameLength,
-        topicName,
-        topicTagBuffer
+      let readTopicArray: Array<KafkaRequestTopic> = [];
+      let remainingTopicToRead = topicArrayLength - 1;
+      while (remainingTopicToRead > 0) {
+        const topicNameLength = data.readUInt8(currentOffset) - 1;
+        currentOffset += 1;
+        console.log("topicNameLength: ", topicNameLength);
+        const topicName = data.toString(
+          "utf-8",
+          currentOffset,
+          currentOffset + topicNameLength
+        );
+        currentOffset += topicNameLength;
+        console.log("topicName: ", topicName);
+        const topicTagBuffer = data.readUInt8(currentOffset);
+        currentOffset += 1;
+        console.log("topicTagBuffer: ", topicTagBuffer);
+
+        const topic = new KafkaRequestTopic(
+          topicNameLength,
+          topicName,
+          topicTagBuffer
+        );
+        readTopicArray.push(topic);
+
+        // Reduce remainingTopicToRead by 1
+        remainingTopicToRead -= 1;
+      }
+
+      const responsePartitionLimit = data.readUInt32BE(currentOffset);
+      currentOffset += 4;
+
+      const cursor = data.readUInt8(currentOffset);
+      currentOffset += 1;
+
+      const tagBuffer = data.readUInt8(currentOffset);
+      currentOffset += 1;
+
+      const request = new KafkaDescribePartitionRequest(
+        messageSize,
+        header,
+        readTopicArray,
+        responsePartitionLimit,
+        cursor,
+        tagBuffer
       );
-      readTopicArray.push(topic);
 
-      // Reduce remainingTopicToRead by 1
-      remainingTopicToRead -= 1;
+      return request;
+    } else {
+      throw new Error(
+        `Unsupported request type: ${requestApiKey}. Only API_VERSIONS and DESCRIBE_TOPIC_PARTITIONS are supported.`
+      );
     }
-
-    const responsePartitionLimit = data.readUInt32BE(currentOffset);
-    currentOffset += 4;
-
-    const cursor = data.readUInt8(currentOffset);
-    currentOffset += 1;
-
-    const tagBuffer = data.readUInt8(currentOffset);
-    currentOffset += 1;
-
-    const request = new KafkaRequest(
-      messageSize,
-      header,
-      readTopicArray,
-      responsePartitionLimit,
-      cursor,
-      tagBuffer
-    );
-
-    return request;
   }
 
   public debug() {
     console.log(`***DEBUG REQUEST***`);
     console.log(`[Request] messageSize: ${this.messageSize}`);
-    console.log(`[Request] header:`);
-    console.log(this.header.debug());
+    console.log(`[Request] header: ${this.header.debugString()}`);
     for (const topic of this.topics) {
       topic.debug();
     }
