@@ -1,5 +1,5 @@
-import type { IResponseBufferSerializable } from "../interface_buffer_serializable";
-import { writeVarInt } from "../utils/utils";
+import type { IResponseBufferSerializable } from "../../interface_buffer_serializable";
+import { writeVarInt } from "../../utils/utils";
 import type { KafkaFetchTopicPartitionItemResp } from "./kafka_fetch_topic_partition_item_resp";
 
 export class KafkaFetchTopicItemResp implements IResponseBufferSerializable {

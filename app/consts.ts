@@ -10,3 +10,9 @@ export const enum ResponseType {
   API_VERSIONS = 18,
   DESCRIBE_TOPIC_PARTITIONS = 75,
 }
+
+export const enum MetadataRecordType {
+  TOPIC = 2,
+  PARTITION = 3,
+  FEATURE_LEVEL = 12
+}

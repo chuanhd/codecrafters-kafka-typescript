@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import { KafkaClusterMetadataTopicRecord } from "./kafka_cluster_metadata_topic_record";
 import { KafkaClusterMetadataPartitionRecord } from "./kafka_cluster_metadata_partition_record";
-import { readSignedVarInt } from "../utils/utils";
+import { readSignedVarInt } from "../../utils/utils";
 import { KafkaClusterMetadataFeatureLevelRecord } from "./kafka_cluster_metadata_feature_level_record";
+import { MetadataRecordType } from "../../consts";
 
 export class KafkaClusterMetadataRecordBatchItem {
   constructor(
@@ -176,14 +177,14 @@ export class KafkaClusterMetadataRecordBatch {
         | KafkaClusterMetadataFeatureLevelRecord
         | null = null;
       switch (recordType) {
-        case 12:
+        case MetadataRecordType.FEATURE_LEVEL:
           valueRecord =
             KafkaClusterMetadataFeatureLevelRecord.fromBuffer(value);
           break;
-        case 2:
+        case MetadataRecordType.TOPIC:
           valueRecord = KafkaClusterMetadataTopicRecord.fromBuffer(value);
           break;
-        case 3:
+        case MetadataRecordType.PARTITION:
           valueRecord = KafkaClusterMetadataPartitionRecord.fromBuffer(value);
           break;
         default:

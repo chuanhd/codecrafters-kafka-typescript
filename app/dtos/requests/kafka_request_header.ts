@@ -37,6 +37,17 @@ export class KafkaRequestHeader {
     this.tagBuffer = tagBuffer;
   }
 
+  getBufferSize(): number {
+    return (
+      2 + // request_api_key
+      2 + // request_api_version
+      4 + // correlationId
+      2 + // clientIdLength
+      this.clientId.length + // clientIdContent
+      1 // tagBuffer
+    );
+  }
+
   public static fromBuffer(buffer: Buffer): KafkaRequestHeader {
     let currentOffset = 0;
     // Next 2 bytes is request_api_key

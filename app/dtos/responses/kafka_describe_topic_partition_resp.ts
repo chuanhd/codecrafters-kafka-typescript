@@ -1,5 +1,5 @@
-import { type IResponseBufferSerializable } from "./interface_buffer_serializable.ts";
-import type { KafkaTopicPartitionItemResp } from "./models/kafka_topic_partition_item_resp.ts";
+import { type IResponseBufferSerializable } from "../../interface_buffer_serializable.ts";
+import type { KafkaTopicPartitionItemResp } from "./kafka_topic_partition_item_resp.ts";
 
 const TagBufferBufferSize = 1; // 1 byte
 const CorrelationIdBufferSize = 4; // 4 bytes

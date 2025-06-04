@@ -1,5 +1,5 @@
+import { readVarInt } from "../../utils/utils";
 import { KafkaRequestHeader } from "./kafka_request_header";
-import { readVarInt } from "../utils/utils";
 
 export class KafkaFetchRequestTopicItem {
   private bufferSize: number = 0;
@@ -50,7 +50,7 @@ export class KafkaFetchRequest {
     public topics: KafkaFetchRequestTopicItem[]
   ) {}
 
-  static fromBuffer(buffer: Buffer): KafkaFetchRequest {
+  static fromBuffer(buffer: Buffer, header: KafkaRequestHeader): KafkaFetchRequest {
     let currentOffset = 0;
     console.log("Reading KafkaFetchRequest from buffer:", buffer.length);
 
@@ -58,44 +58,8 @@ export class KafkaFetchRequest {
     console.log(`messageSize: ${messageSize} at offset ${currentOffset}`);
     currentOffset += 4;
 
-    // Next 2 bytes is request_api_key
-    const requestApiKey = buffer.readUint16BE(currentOffset);
-    currentOffset += 2;
-    console.log("requestApiKey: ", requestApiKey);
-    // Next 2 bytes is request_api_version
-    const requestApiVersion = buffer.readUInt16BE(currentOffset);
-    currentOffset += 2;
-    console.log("requestApiVersion: ", requestApiVersion);
-    // Next 4 bytes is correlationId
-    const correlationId = buffer.readUInt32BE(currentOffset);
-    currentOffset += 4;
-    console.log("correlationId: ", correlationId);
-
-    const clientIdLength = buffer.readUInt16BE(currentOffset);
-    currentOffset += 2;
-    console.log("clientIdLength: ", clientIdLength);
-
-    const clientIdContent = buffer.toString(
-      "utf-8",
-      currentOffset,
-      currentOffset + clientIdLength
-    );
-    currentOffset += clientIdLength;
-    console.log("clientIdContent: ", clientIdContent);
-
-    const headerTagBuffer = buffer.readUInt8(currentOffset);
-    currentOffset += 1;
-    console.log("headerTagBuffer: ", headerTagBuffer);
-
-    const header = new KafkaRequestHeader(
-      requestApiKey,
-      requestApiVersion,
-      correlationId,
-      clientIdLength,
-      clientIdContent,
-      headerTagBuffer
-    );
-    console.log(`header: ${header.debugString()} at offset ${currentOffset}`);
+    // Advance currentOffset by header size
+    currentOffset += header.getBufferSize();
 
     const maxWaitTime = buffer.readUInt32BE(currentOffset);
     currentOffset += 4;
