@@ -107,17 +107,39 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         {
           // Handle fetch request
           const request = KafkaFetchRequest.fromBuffer(data, header);
-          const errorCode = ErrorCode.NO_ERROR;
-          const topicsInResponse = request.topics.map((topic) => {
-            const partitions = topic.partitions.map(
-              (_partition, index) =>
-                new KafkaFetchTopicPartitionItemResp(index, 100) // Assuming 100 as the error code
-            );
-            return new KafkaFetchTopicItemResp(
-              topic.topicId, // topicId
-              partitions
+
+          const metadataLogFile = KafkaClusterMetadataLogFile.fromFile(
+            "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log"
+          );
+          const topicRecords = metadataLogFile.getTopicRecords();
+          // Log topic records for debugging
+          topicRecords.forEach((topicRecord) => {
+            console.log(
+              `Topic Record: ${topicRecord.name} - UUID: ${topicRecord.uuid.toString("hex")}`
             );
           });
+
+          const topicsInResponse = request.topics.map((topicReq) => {
+            const partitionRecordsResponse = topicReq.partitions.map(
+              (_partitionRecord, index) =>
+              {
+                const partitionRecords =
+                  metadataLogFile.getPartitionRecordsMatchTopicUuid(topicReq.topicId);
+                const errorCode = partitionRecords.length === 0 ? ErrorCode.UNKNOWN_TOPIC : ErrorCode.NO_ERROR;
+                return new KafkaFetchTopicPartitionItemResp(index, errorCode)
+              }
+            );
+
+            const topic = new KafkaFetchTopicItemResp(
+              topicReq.topicId, // topicId
+              partitionRecordsResponse
+            );
+
+            return topic;
+          });
+
+          const errorCode = ErrorCode.NO_ERROR;
+          
           const body = new KafkaFetchResponseBody(
             0, // throttleTime
             errorCode, // errorCode

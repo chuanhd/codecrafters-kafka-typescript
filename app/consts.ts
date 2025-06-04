@@ -1,4 +1,5 @@
 export const enum ErrorCode {
+  UNKNOWN_TOPIC = 100,
   UNSUPPORTED_VERSION = 35,
   UNKNOWN_TOPIC_OR_PARTITION = 3,
   NO_ERROR = 0,
