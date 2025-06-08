@@ -16,9 +16,9 @@ export class KafkaFetchTopicItemResp implements IResponseBufferSerializable {
 
     const tagBufferBuffer = writeVarInt(0); // Placeholder for tag buffer
 
-    console.log(
-      `[KafkaFetchTopicItemResp] topicId size: ${this.topicId.length}, numPartitionsBuffer size: ${numPartitionsBuffer.length}, partitionsBuffer size: ${partitionsBuffer.length}, tagBufferBuffer size: ${tagBufferBuffer.length}`
-    );
+    // console.log(
+    //   `[KafkaFetchTopicItemResp] topicId size: ${this.topicId.length}, numPartitionsBuffer size: ${numPartitionsBuffer.length}, partitionsBuffer size: ${partitionsBuffer.length}, tagBufferBuffer size: ${tagBufferBuffer.length}`
+    // );
     
     return Buffer.concat([this.topicId, numPartitionsBuffer, partitionsBuffer, tagBufferBuffer]);
   }

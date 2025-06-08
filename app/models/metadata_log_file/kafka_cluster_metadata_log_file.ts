@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import { KafkaClusterMetadataTopicRecord } from "./kafka_cluster_metadata_topic_record";
 import { KafkaClusterMetadataPartitionRecord } from "./kafka_cluster_metadata_partition_record";
-import { readSignedVarInt } from "../../utils/utils";
+import { readSignedVarInt, readVarInt } from "../../utils/utils";
 import { KafkaClusterMetadataFeatureLevelRecord } from "./kafka_cluster_metadata_feature_level_record";
 import { MetadataRecordType } from "../../consts";
 
@@ -131,9 +131,9 @@ export class KafkaClusterMetadataRecordBatch {
       const { value: recordLength, length: recordLengthSize } = readSignedVarInt(
         buffer.subarray(currentOffset, currentOffset + 4)
       );
-      console.log(
-        `Record ${i}: length: ${recordLength} - recordLengthSize: ${recordLengthSize}`
-      );
+      // console.log(
+      //   `Record ${i}: length: ${recordLength} - recordLengthSize: ${recordLengthSize}`
+      // );
       currentOffset += recordLengthSize;
 
       const attributes = buffer.readUInt8(currentOffset);
@@ -148,7 +148,7 @@ export class KafkaClusterMetadataRecordBatch {
       // console.log(`Record ${i}: offsetDelta: ${offsetDelta}`);
       currentOffset += 1;
 
-      const { value: keyLength, length: keyLengthSize } = readSignedVarInt(
+      const { value: keyLength, length: keyLengthSize } = readVarInt(
         buffer.subarray(currentOffset, currentOffset + 4)
       );
       console.log(
@@ -167,9 +167,9 @@ export class KafkaClusterMetadataRecordBatch {
       currentOffset += valueLengthSize;
 
       const value = buffer.subarray(currentOffset, currentOffset + valueLength);
-      // console.log(`Record ${i}: value buffer length: ${value.length}`);
+      console.log(`Record ${i}: value buffer length: ${value.length}`);
       const recordType = value.readInt8(1);
-      // console.log(`Record ${i}: recordType: ${recordType}`);
+      console.log(`Record ${i}: recordType: ${recordType}`);
 
       let valueRecord:
         | KafkaClusterMetadataTopicRecord
@@ -324,6 +324,15 @@ export class KafkaClusterMetadataLogFile {
       ) as KafkaClusterMetadataTopicRecord[];
 
     return topicRecords;
+  }
+
+  getMatchTopicRecord(topicUUID: Buffer): KafkaClusterMetadataTopicRecord | undefined {
+    const topicRecords = this.getTopicRecords();
+    const topicRecord = topicRecords.find((record) =>
+      record.uuid.equals(topicUUID)
+    );
+
+    return topicRecord;
   }
 
   getPartitionRecordsMatchTopicUuid(

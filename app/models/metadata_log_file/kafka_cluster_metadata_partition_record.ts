@@ -63,18 +63,20 @@ export class KafkaClusterMetadataPartitionRecord {
     const topicUuid = buffer.subarray(currentOffset, currentOffset + 16);
     currentOffset += 16;
 
+    console.log(`[KafkaClusterMetadataPartitionRecord] partitionId: ${partitionId} - topicUuid: ${topicUuid.toString("hex")}`);
+
     const lengthOfReplicas = buffer.readUInt8(currentOffset) - 1;
     currentOffset += 1;
-    console.log(
-      `lengthOfReplicas: ${lengthOfReplicas} - currentOffset: ${currentOffset}`
-    );
+    // console.log(
+    //   `lengthOfReplicas: ${lengthOfReplicas} - currentOffset: ${currentOffset}`
+    // );
     const replicas = [];
     for (let i = 0; i < lengthOfReplicas; i++) {
       const replicaId = buffer.readUInt32BE(currentOffset);
       replicas.push(replicaId);
       currentOffset += 4;
     }
-    console.log(`replicas: ${replicas.join(", ")}`);
+    // console.log(`replicas: ${replicas.join(", ")}`);
 
     currentOffset += lengthOfReplicas * 4;
 
@@ -87,16 +89,16 @@ export class KafkaClusterMetadataPartitionRecord {
       isr.push(isrId);
       currentOffset += 4;
     }
-    console.log(`isr: ${isr.join(", ")}`);
-    console.log(
-      `lengthOfIsr: ${lengthOfIsr} - currentOffset: ${currentOffset}`
-    );
+    // console.log(`isr: ${isr.join(", ")}`);
+    // console.log(
+    //   `lengthOfIsr: ${lengthOfIsr} - currentOffset: ${currentOffset}`
+    // );
 
     const lengthOfRemovingReplicas = buffer.readUInt8(currentOffset) - 1;
     currentOffset += 1;
-    console.log(
-      `lengthOfRemovingReplicas: ${lengthOfRemovingReplicas} - currentOffset: ${currentOffset}`
-    );
+    // console.log(
+    //   `lengthOfRemovingReplicas: ${lengthOfRemovingReplicas} - currentOffset: ${currentOffset}`
+    // );
 
     const removingReplicas = [];
     for (let i = 0; i < lengthOfRemovingReplicas; i++) {
@@ -104,13 +106,13 @@ export class KafkaClusterMetadataPartitionRecord {
       removingReplicas.push(removingReplicaId);
       currentOffset += 4;
     }
-    console.log(`removingReplicas: ${removingReplicas.join(", ")}`);
+    // console.log(`removingReplicas: ${removingReplicas.join(", ")}`);
 
     const lengthOfAddingReplicas = buffer.readUInt8(currentOffset) - 1;
     currentOffset += 1;
-    console.log(
-      `lengthOfAddingReplicas: ${lengthOfAddingReplicas} - currentOffset: ${currentOffset}`
-    );
+    // console.log(
+    //   `lengthOfAddingReplicas: ${lengthOfAddingReplicas} - currentOffset: ${currentOffset}`
+    // );
 
     const addingReplicas = [];
     for (let i = 0; i < lengthOfAddingReplicas; i++) {
@@ -118,7 +120,7 @@ export class KafkaClusterMetadataPartitionRecord {
       addingReplicas.push(addingReplicaId);
       currentOffset += 4;
     }
-    console.log(`addingReplicas: ${addingReplicas.join(", ")}`);
+    // console.log(`addingReplicas: ${addingReplicas.join(", ")}`);
 
     const leader = buffer.readUInt32BE(currentOffset);
     currentOffset += 4;

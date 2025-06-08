@@ -29,37 +29,37 @@ export class KafkaClusterMetadataFeatureLevelRecord {
     );
 
     const frameVersion = buffer.readUInt8(currentOffset);
-    console.log(`frameVersion: ${frameVersion} at offset ${currentOffset}`);
+    // console.log(`frameVersion: ${frameVersion} at offset ${currentOffset}`);
     currentOffset += 1;
 
     const type = buffer.readUInt8(currentOffset);
-    console.log(`type: ${type} at offset ${currentOffset}`);
+    // console.log(`type: ${type} at offset ${currentOffset}`);
     currentOffset += 1;
 
     const version = buffer.readUInt8(currentOffset);
-    console.log(`version: ${version} at offset ${currentOffset}`);
+    // console.log(`version: ${version} at offset ${currentOffset}`);
     currentOffset += 1;
 
     const nameLength = buffer.readUInt8(currentOffset) - 1;
-    console.log(
-      `nameLength: ${nameLength} (original: ${buffer.readUInt8(
-        currentOffset
-      )}) at offset ${currentOffset}`
-    );
+    // console.log(
+    //   `nameLength: ${nameLength} (original: ${buffer.readUInt8(
+    //     currentOffset
+    //   )}) at offset ${currentOffset}`
+    // );
     currentOffset += 1;
 
     const name = buffer
       .subarray(currentOffset, currentOffset + nameLength)
       .toString("utf-8");
-    console.log(`name: "${name}" at offset ${currentOffset}`);
+    // console.log(`name: "${name}" at offset ${currentOffset}`);
     currentOffset += nameLength;
 
     const featureLevel = buffer.readUInt16BE(currentOffset);
-    console.log(`featureLevel: ${featureLevel} at offset ${currentOffset}`);
+    // console.log(`featureLevel: ${featureLevel} at offset ${currentOffset}`);
     currentOffset += 2;
 
     const tagFieldsCount = buffer.readUInt8(currentOffset);
-    console.log(`tagFieldsCount: ${tagFieldsCount} at offset ${currentOffset}`);
+    // console.log(`tagFieldsCount: ${tagFieldsCount} at offset ${currentOffset}`);
     currentOffset += 1;
 
     return new KafkaClusterMetadataFeatureLevelRecord(

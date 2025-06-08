@@ -24,9 +24,9 @@ export class KafkaFetchResponseBody implements IResponseBufferSerializable {
     );
     const tagBufferBuffer = writeVarInt(0);
 
-    console.log(
-      `[KafkaFetchResponseBody] throttleTimeBuffer size: ${throttleTimeBuffer.length}, errorCodeBuffer size: ${errorCodeBuffer.length}, sessionIdBuffer size: ${sessionIdBuffer.length}, numResponsesBuffer size: ${numResponsesBuffer.length}, topicsBuffer size: ${topicsBuffer.length}, tagBufferBuffer size: ${tagBufferBuffer.length}`
-    );
+    // console.log(
+    //   `[KafkaFetchResponseBody] throttleTimeBuffer size: ${throttleTimeBuffer.length}, errorCodeBuffer size: ${errorCodeBuffer.length}, sessionIdBuffer size: ${sessionIdBuffer.length}, numResponsesBuffer size: ${numResponsesBuffer.length}, topicsBuffer size: ${topicsBuffer.length}, tagBufferBuffer size: ${tagBufferBuffer.length}`
+    // );
 
     return Buffer.concat([
       throttleTimeBuffer,

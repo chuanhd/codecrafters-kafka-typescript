@@ -1,4 +1,14 @@
-export type BufferFieldType = "string" | "number" | "array";
+export type BufferFieldType = "string" | "uint8" | "uint16" | "uint32" | "uint64" | "varint" | "uvarint" | "compact_array";
+
+interface BufferField {
+  name: string;
+  size: number | string;
+  type: BufferFieldType;
+
+  encode(): Buffer;
+  
+  decode(buffer: Buffer): void;
+}
 
 export type BufferFieldDefinition = {
   name: string;
@@ -12,3 +22,4 @@ export type ArrayFieldDefinition = {
   size: number;
   fields: Array<BufferFieldDefinition>;
 };
+

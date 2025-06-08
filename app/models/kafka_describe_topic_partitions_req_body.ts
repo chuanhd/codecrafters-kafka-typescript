@@ -15,17 +15,17 @@ const kafkaApiVersionsRequestBodyDef: Array<BufferFieldDefinition> = [
   {
     name: FieldName.TopicsArrayLength,
     size: 1,
-    type: "number",
+    type: "varint",
   },
   {
     name: FieldName.TopicsArray,
     size: FieldName.TopicsArrayLength,
-    type: "array",
+    type: "compact_array",
     fields: [
       {
         name: FieldName.TopicNameLength,
         size: 1,
-        type: "number",
+        type: "uint8",
       },
       {
         name: FieldName.TopicName,
@@ -35,24 +35,24 @@ const kafkaApiVersionsRequestBodyDef: Array<BufferFieldDefinition> = [
       {
         name: FieldName.TopicTagBuffer,
         size: 1,
-        type: "number",
+        type: "uint8",
       },
     ],
   },
   {
     name: FieldName.ResponsePartitionLimit,
     size: 4,
-    type: "number",
+    type: "uint32",
   },
   {
     name: FieldName.Cursor,
     size: 1,
-    type: "number",
+    type: "uint8",
   },
   {
     name: FieldName.TagBuffer,
     size: 1,
-    type: "number",
+    type: "uint8",
   },
 ];
 
@@ -66,7 +66,7 @@ const readNumberAtomField = (
   currentOffset: Wrapper<number>,
   result: Map<string, string | number>,
 ) => {
-  if (field.type !== "number") {
+  if (!field.type.includes("int")) {
     throw new Error("Not support other than number type");
   }
   console.log(
@@ -127,20 +127,18 @@ const readAtomField = (
   result: Map<string, string | number>,
 ) => {
   switch (field.type) {
-    case "number":
-      {
-        readNumberAtomField(field, data, currentOffset, result);
-      }
-      break;
+    case "compact_array":
+      throw new Error("Compact array is not supported in this readAtomField context");
     case "string":
       {
         readStringAtomField(field, data, currentOffset, result);
       }
       break;
     default:
-      throw new Error(
-        `readAtomField only support number or string field type: ${field.type}`,
-      );
+      {
+        readNumberAtomField(field, data, currentOffset, result);
+      }
+      break;
   }
 
   return result;
@@ -166,7 +164,10 @@ export class KafkaDescribeTopicPartitionsRequestBody {
     KafkaDescribeTopicPartitionsRequestBody.StructureDefinition.forEach(
       (field) => {
         switch (field.type) {
-          case "number":
+          case "uint8":
+          case "uint16":
+          case "uint32":
+          case "uint64":
             {
               if (typeof field.size === "number") {
                 const value = data.readUIntBE(currentOffset, field.size);
@@ -206,7 +207,7 @@ export class KafkaDescribeTopicPartitionsRequestBody {
               currentOffset += realBufferSize;
             }
             break;
-          case "array":
+          case "compact_array":
             {
               // Get array size by reading reference field value
               // Read content of referenced field

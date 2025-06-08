@@ -111,22 +111,23 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           const metadataLogFile = KafkaClusterMetadataLogFile.fromFile(
             "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log"
           );
-          const topicRecords = metadataLogFile.getTopicRecords();
-          // Log topic records for debugging
-          topicRecords.forEach((topicRecord) => {
-            console.log(
-              `Topic Record: ${topicRecord.name} - UUID: ${topicRecord.uuid.toString("hex")}`
-            );
-          });
+          // const partitionRecords = metadataLogFile.getPartitionRecords();
+          // // Log topic records for debugging
+          // partitionRecords.forEach((partitionRecord) => {
+          //   console.log(
+          //     `Partition Record: ${partitionRecord.partitionId} - UUID: ${partitionRecord.topicUuid.toString("hex")}`
+          //   );
+          // });
 
           const topicsInResponse = request.topics.map((topicReq) => {
             const partitionRecordsResponse = topicReq.partitions.map(
-              (_partitionRecord, index) =>
+              (partitionRecord) =>
               {
-                const partitionRecords =
-                  metadataLogFile.getPartitionRecordsMatchTopicUuid(topicReq.topicId);
-                const errorCode = partitionRecords.length === 0 ? ErrorCode.UNKNOWN_TOPIC : ErrorCode.NO_ERROR;
-                return new KafkaFetchTopicPartitionItemResp(index, errorCode)
+                const matchedTopicRecord = metadataLogFile.getMatchTopicRecord(
+                  topicReq.topicId
+                );
+                console.log(`matchedTopicRecord: ${matchedTopicRecord?.name} - partitionIndex: ${partitionRecord.partitionId}`);
+                return new KafkaFetchTopicPartitionItemResp(partitionRecord.partitionId, matchedTopicRecord)
               }
             );
 

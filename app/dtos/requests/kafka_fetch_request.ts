@@ -1,13 +1,25 @@
 import { readVarInt } from "../../utils/utils";
 import { KafkaRequestHeader } from "./kafka_request_header";
 
+export class KafkaFetchRequestTopicPartitionItem {
+  constructor(
+    public partitionId: number
+  ){}
+
+  debugString(): string {
+    return `KafkaFetchRequestTopicPartitionItem {
+      partitionId: ${this.partitionId}
+    }`;
+  }
+}
+
 export class KafkaFetchRequestTopicItem {
   private bufferSize: number = 0;
   public getBufferSize(): number {
     return this.bufferSize;
   }
 
-  constructor(public topicId: Buffer, public partitions: Buffer[]) {}
+  constructor(public topicId: Buffer, public partitions: KafkaFetchRequestTopicPartitionItem[]) {}
 
   static fromBuffer(buffer: Buffer): KafkaFetchRequestTopicItem {
     let currentOffset = 0;
@@ -27,12 +39,10 @@ export class KafkaFetchRequestTopicItem {
 
     let partitions = [];
     for (let i = 0; i < numOfPartitions; i++) {
-      const partitionId = buffer.subarray(currentOffset, currentOffset + 4);
-      console.log(
-        `partitionId: ${partitionId.toString("hex")} at offset ${currentOffset}`
-      );
+      const partitionId = buffer.readUInt32BE(currentOffset);
       currentOffset += 4;
-      partitions.push(partitionId);
+      const partitionItem = new KafkaFetchRequestTopicPartitionItem(partitionId);
+      partitions.push(partitionItem);
     }
 
     const topicItem = new KafkaFetchRequestTopicItem(topicId, partitions);
@@ -79,9 +89,6 @@ export class KafkaFetchRequest {
     const sessionEpoch = buffer.readUInt32BE(currentOffset);
     currentOffset += 4;
     console.log("sessionEpoch: ", sessionEpoch);
-    console.log(
-      `currentOffset after reading til sessionEpoch: ${currentOffset} - data length: ${buffer.length}`
-    );
 
     const { value: numOfTopicsPlusOne, length: numOfTopicsBufferLength } = readVarInt(
       buffer.subarray(currentOffset)
