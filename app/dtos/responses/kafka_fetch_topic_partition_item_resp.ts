@@ -42,7 +42,7 @@ export class KafkaFetchTopicPartitionItemResp
     }
     
     const compactRecordsLengthBuffer = writeVarInt(records.length + 1); // Placeholder for compact records length
-    const recordBuffers = records.map(record => record.toBuffer());
+    const recordBuffers = records.map(record => record.encodeTo());
 
     const tagFieldsArrayLength = 0; // Placeholder for tag fields array length
     const tagBufferBuffer = writeVarInt(tagFieldsArrayLength);

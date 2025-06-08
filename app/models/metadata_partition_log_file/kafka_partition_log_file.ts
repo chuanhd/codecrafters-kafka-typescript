@@ -21,11 +21,10 @@ export class KafkaPartitionLogFile {
 
     while (currentOffset < buffer.length) {
       // Start reading first record batch
-      const batch = KafkaPartitionRecordBatch.fromBuffer(
-        buffer.subarray(currentOffset)
-      );
+      const batch = new KafkaPartitionRecordBatch();
+      const numberOfBytesRead = batch.decodeFrom(buffer.subarray(currentOffset));
       console.log(`[KafkaPartitionRecordBatch] debug: ${batch.debugString()}`);
-      currentOffset += batch.bufferSize();
+      currentOffset += numberOfBytesRead;
       batches.push(batch);
     }
 
