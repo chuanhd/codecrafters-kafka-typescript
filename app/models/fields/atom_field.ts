@@ -1,4 +1,5 @@
-import { readVarInt, writeVarInt, readSignedVarInt } from "../../utils/utils";
+import { signedEncodingLength, encodeSigned, decodeSigned } from "../../utils/signed_varint";
+import { encodingLength, encode, decode } from "../../utils/unsigned_varint";
 
 export type BufferFieldType = "string" | "uint8" | "uint16" | "uint32" | "uint64" | "varint" | "uvarint" | "compact_array" | "buffer";
 
@@ -122,31 +123,18 @@ export class VarIntField implements BufferField {
 
   constructor(value: number) {
     this.value = value;
-    this.size = this.calculateVarIntSize(value);
-  }
-
-  calculateVarIntSize(value: number): number {
-    if (value < 0) {
-      throw new Error("Negative values are not supported for VarIntField");
-    }
-    let size = 0;
-    do {
-      size++;
-      value >>>= 7; // Shift right by 7 bits
-    } while (value > 0);
-    return size;
+    this.size = signedEncodingLength(value);
   }
 
   encode(): Buffer {
-
-    return writeVarInt(this.value);
+    return Buffer.from(encodeSigned(this.value));
   }
 
   decode(buffer: Buffer): void {
-    const { value, length } = readSignedVarInt(buffer);
+    const value = decodeSigned(buffer);
 
     this.value = value; // Store the decoded value
-    this.size = length; // Update size based on how many bytes were read
+    this.size = signedEncodingLength(value);
   }
 }
 
@@ -157,30 +145,18 @@ export class UVarIntField implements BufferField {
 
   constructor(value: number) {
     this.value = value;
-    this.size = this.calculateUVarIntSize(value);
-  }
-
-  calculateUVarIntSize(value: number): number {
-    if (value < 0) {
-      throw new Error("Negative values are not supported for UVarIntField");
-    }
-    let size = 0;
-    do {
-      size++;
-      value >>>= 7; // Shift right by 7 bits
-    } while (value > 0);
-    return size;
+    this.size = encodingLength(value);
   }
 
   encode(): Buffer {
-    return writeVarInt(this.value);
+    return Buffer.from(encode(this.value));
   }
 
   decode(buffer: Buffer): void {
-    const { value, length } = readVarInt(buffer);
+    const value = decode(buffer);
 
     this.value = value; // Store the decoded value
-    this.size = length; // Update size based on how many bytes were read
+    this.size = encodingLength(value); // Update size based on how many bytes were read
   }
 }
 
