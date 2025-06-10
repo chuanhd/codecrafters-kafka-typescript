@@ -39,7 +39,6 @@ export class KafkaFetchTopicPartitionItemResp
     }
 
     const totalRecordsSize = records.reduce((total, record) => total + record.bufferSize(), 0);
-    console.log(`Total records size for partition ${partitionIndex}: ${totalRecordsSize} bytes`);
     this.compactRecordsLength = new UVarIntField(totalRecordsSize); 
     this.records = records;
     this.tagFieldsArrayLength = new VarIntField(0);
