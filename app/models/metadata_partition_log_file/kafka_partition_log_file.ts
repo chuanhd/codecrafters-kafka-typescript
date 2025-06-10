@@ -28,6 +28,8 @@ export class KafkaPartitionLogFile {
       batches.push(batch);
     }
 
+    console.log(`batches size: ${batches.length}`);
+
     const logFile = new KafkaPartitionLogFile(batches);
 
     return logFile;

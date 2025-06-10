@@ -182,7 +182,7 @@ export class CompactArrayField implements BufferField {
   decode(buffer: Buffer): void {
     let offset = 0;
     for (const field of this.fields) {
-      const fieldBuffer = buffer.slice(offset, offset + field.size);
+      const fieldBuffer = buffer.subarray(offset, offset + field.size);
       field.decode(fieldBuffer);
       offset += field.size;
     }

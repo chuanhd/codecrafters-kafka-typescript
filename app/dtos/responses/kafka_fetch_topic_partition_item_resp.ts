@@ -1,68 +1,66 @@
 import { KafkaClusterMetadataTopicRecord } from './../../models/metadata_log_file/kafka_cluster_metadata_topic_record';
-import type { IResponseBufferSerializable } from "../../interface_buffer_serializable";
-import { writeVarInt } from "../../utils/utils";
 import { ErrorCode } from '../../consts';
 import { KafkaPartitionLogFile } from '../../models/metadata_partition_log_file/kafka_partition_log_file';
 import { KafkaPartitionRecordBatch } from '../../models/metadata_partition_log_file/kafka_partition_record_batch';
+import { UInt16Field, UInt32Field, UInt64Field, UVarIntField, VarIntField } from '../../models/fields/atom_field';
+import type { BufferEncode } from '../../models/common/interface_encode';
 
 export class KafkaFetchTopicPartitionItemResp
-  implements IResponseBufferSerializable
+  implements BufferEncode
 {
-  constructor(public partitionIndex: number, public topic?: KafkaClusterMetadataTopicRecord) {}
+  public partitionIndex: UInt32Field;
+  public errorCode: UInt16Field;
+  public highWaterMark: UInt64Field;
+  public lastStableOffset: UInt64Field;
+  public logStartOffset: UInt64Field;
+  public abortedTransactions: VarIntField;
+  public preferredReadReplica: UInt32Field;
+  public compactRecordsLength: UVarIntField;
+  public records: KafkaPartitionRecordBatch[];
+  public tagFieldsArrayLength: VarIntField;
 
-  toBuffer(): Buffer {
-    const partitionIndexBuffer = Buffer.alloc(4);
-    partitionIndexBuffer.writeUInt32BE(this.partitionIndex);
-
+  constructor(partitionIndex: number, public topic?: KafkaClusterMetadataTopicRecord) {
+    this.partitionIndex = new UInt32Field(partitionIndex);
     const errorCode = this.topic ? ErrorCode.NO_ERROR : ErrorCode.UNKNOWN_TOPIC;
-    const errorCodeBuffer = Buffer.alloc(2);
-    errorCodeBuffer.writeUInt16BE(errorCode);
-
-    const highWaterMarkBuffer = Buffer.alloc(8);
-    highWaterMarkBuffer.writeBigInt64BE(BigInt(0)); // Placeholder for high watermark
-
-    const lastStableOffsetBuffer = Buffer.alloc(8);
-    lastStableOffsetBuffer.writeBigInt64BE(BigInt(0)); // Placeholder for last stable offset
-
-    const logStartOffsetBuffer = Buffer.alloc(8);
-    logStartOffsetBuffer.writeBigInt64BE(BigInt(0)); // Placeholder for log start offset
-
-    const abortedTransactionsBuffer = writeVarInt(1);
-
-    const preferredReadReplicaBuffer = Buffer.alloc(4);
-    preferredReadReplicaBuffer.writeUInt32BE(0); // Placeholder for preferred read replica
+    this.errorCode = new UInt16Field(errorCode);
+    this.highWaterMark = new UInt64Field(0n);
+    this.lastStableOffset = new UInt64Field(0n); 
+    this.logStartOffset = new UInt64Field(0n);
+    this.abortedTransactions = new VarIntField(0); 
+    this.preferredReadReplica = new UInt32Field(0); 
 
     let records: KafkaPartitionRecordBatch[] = [];
 
     if (errorCode === ErrorCode.NO_ERROR) {
       const recordLogFile = KafkaPartitionLogFile.fromFile(
-                `/tmp/kraft-combined-logs/${this.topic!.name}-${this.partitionIndex}/00000000000000000000.log`
+                `/tmp/kraft-combined-logs/${this.topic!.name}-${this.partitionIndex.value}/00000000000000000000.log`
               );
       records = recordLogFile.getRecords();
     }
+
+    const totalRecordsSize = records.reduce((total, record) => total + record.bufferSize(), 0);
+    console.log(`Total records size for partition ${partitionIndex}: ${totalRecordsSize} bytes`);
+    this.compactRecordsLength = new UVarIntField(totalRecordsSize); 
+    this.records = records;
+    this.tagFieldsArrayLength = new VarIntField(0);
     
-    const compactRecordsLengthBuffer = writeVarInt(records.length + 1); // Placeholder for compact records length
-    const recordBuffers = records.map(record => record.encodeTo());
+  }
 
-    const tagFieldsArrayLength = 0; // Placeholder for tag fields array length
-    const tagBufferBuffer = writeVarInt(tagFieldsArrayLength);
+  encodeTo(): Buffer {
+    const buffers = [];
+    buffers.push(this.partitionIndex.encode());
+    buffers.push(this.errorCode.encode());
+    buffers.push(this.highWaterMark.encode());
+    buffers.push(this.lastStableOffset.encode());
+    buffers.push(this.logStartOffset.encode());
+    buffers.push(this.abortedTransactions.encode());
+    buffers.push(this.preferredReadReplica.encode());
+    buffers.push(this.compactRecordsLength.encode());
+    this.records.forEach((record) => {
+      buffers.push(record.encodeTo());
+    });
+    buffers.push(this.tagFieldsArrayLength.encode());
 
-    // Log all buffer sizes for debugging
-    // console.log(
-    //   `[KafkaFetchTopicPartitionItemResp] partitionIndexBuffer size: ${partitionIndexBuffer.length}, errorCodeBuffer size: ${errorCodeBuffer.length}, highWaterMarkBuffer size: ${highWaterMarkBuffer.length}, lastStableOffsetBuffer size: ${lastStableOffsetBuffer.length}, logStartOffsetBuffer size: ${logStartOffsetBuffer.length}, abortedTransactionsBuffer size: ${abortedTransactionsBuffer.length}, preferredReadReplicaBuffer size: ${preferredReadReplicaBuffer.length}, compactRecordsLengthBuffer size: ${compactRecordsLengthBuffer.length}, tagBufferBuffer size: ${tagBufferBuffer.length}`
-    // );
-
-    return Buffer.concat([
-      partitionIndexBuffer,
-      errorCodeBuffer,
-      highWaterMarkBuffer,
-      lastStableOffsetBuffer,
-      logStartOffsetBuffer,
-      abortedTransactionsBuffer,
-      preferredReadReplicaBuffer,
-      compactRecordsLengthBuffer,
-      ...recordBuffers,
-      tagBufferBuffer,
-    ]);
+    return Buffer.concat(buffers);
   }
 }

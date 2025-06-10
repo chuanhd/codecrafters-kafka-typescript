@@ -4,7 +4,7 @@ export const kafkaApiVersionsRequestBodyDef: Array<BufferFieldDefinition> = [
   {
     name: "clientIdLength",
     size: 1,
-    type: "number",
+    type: "uint8",
   },
   {
     name: "clientId",

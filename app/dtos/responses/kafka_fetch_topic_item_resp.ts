@@ -1,25 +1,32 @@
 import type { IResponseBufferSerializable } from "../../interface_buffer_serializable";
-import { writeVarInt } from "../../utils/utils";
+import type { BufferEncode } from "../../models/common/interface_encode";
+import { UVarIntField } from "../../models/fields/atom_field";
 import type { KafkaFetchTopicPartitionItemResp } from "./kafka_fetch_topic_partition_item_resp";
 
-export class KafkaFetchTopicItemResp implements IResponseBufferSerializable {
+export class KafkaFetchTopicItemResp implements IResponseBufferSerializable, BufferEncode {
+  public numPartitions: UVarIntField;
+  public tagBuffer: UVarIntField;
+
   constructor(
     public topicId: Buffer,
     public partitions: KafkaFetchTopicPartitionItemResp[]
-  ) {}
+  ) {
+    this.numPartitions = new UVarIntField(this.partitions.length + 1);
+    this.tagBuffer = new UVarIntField(0); // Placeholder for tag buffer
+  }
 
-  toBuffer(): Buffer {
-    const numPartitionsBuffer = writeVarInt(this.partitions.length + 1);
+  encodeTo(): Buffer {
+    const numPartitionsBuffer = this.numPartitions.encode();
     const partitionsBuffer = Buffer.concat(
-      this.partitions.map((partition) => partition.toBuffer())
+      this.partitions.map((partition) => partition.encodeTo())
     );
 
-    const tagBufferBuffer = writeVarInt(0); // Placeholder for tag buffer
-
-    // console.log(
-    //   `[KafkaFetchTopicItemResp] topicId size: ${this.topicId.length}, numPartitionsBuffer size: ${numPartitionsBuffer.length}, partitionsBuffer size: ${partitionsBuffer.length}, tagBufferBuffer size: ${tagBufferBuffer.length}`
-    // );
+    const tagBufferBuffer = this.tagBuffer.encode(); // Placeholder for tag buffer
     
     return Buffer.concat([this.topicId, numPartitionsBuffer, partitionsBuffer, tagBufferBuffer]);
+  }
+
+  toBuffer(): Buffer { 
+    return this.encodeTo()
   }
 }

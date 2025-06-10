@@ -12,7 +12,7 @@ const kafkaApiVersionsRequestBodyDef: Array<BufferFieldDefinition> = [
   {
     name: FieldName.ClientIdLength,
     size: 1,
-    type: "number",
+    type: "uint8",
   },
   {
     name: FieldName.ClientId,
@@ -22,7 +22,7 @@ const kafkaApiVersionsRequestBodyDef: Array<BufferFieldDefinition> = [
   {
     name: FieldName.ClientSoftwareVersionLength,
     size: 1,
-    type: "number",
+    type: "uint8",
   },
   {
     name: FieldName.ClientSoftware,
@@ -32,7 +32,7 @@ const kafkaApiVersionsRequestBodyDef: Array<BufferFieldDefinition> = [
   {
     name: FieldName.TagBuffer,
     size: 1,
-    type: "number",
+    type: "uint8",
   },
 ];
 

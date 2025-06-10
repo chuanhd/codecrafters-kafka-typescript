@@ -111,13 +111,6 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           const metadataLogFile = KafkaClusterMetadataLogFile.fromFile(
             "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log"
           );
-          // const partitionRecords = metadataLogFile.getPartitionRecords();
-          // // Log topic records for debugging
-          // partitionRecords.forEach((partitionRecord) => {
-          //   console.log(
-          //     `Partition Record: ${partitionRecord.partitionId} - UUID: ${partitionRecord.topicUuid.toString("hex")}`
-          //   );
-          // });
 
           const topicsInResponse = request.topics.map((topicReq) => {
             const partitionRecordsResponse = topicReq.partitions.map(
