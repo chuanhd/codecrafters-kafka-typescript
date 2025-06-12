@@ -1,5 +1,5 @@
-import { KafkaRequestHeader } from "./dtos/requests/kafka_request_header";
-import type IRequestHandler from "./models/request_handlers/interface_request_handler";
+import { KafkaRequestHeader } from "../../dtos/requests/kafka_request_header";
+import type IRequestHandler from "./interface_request_handler";
 
 export class KafkaRequestHandlerCenter {
   private handler: IRequestHandler[];

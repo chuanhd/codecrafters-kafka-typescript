@@ -3,7 +3,7 @@ import { KafkaClusterMetadataTopicRecord } from "./kafka_cluster_metadata_topic_
 import { KafkaClusterMetadataPartitionRecord } from "./kafka_cluster_metadata_partition_record";
 import { readSignedVarInt, readVarInt } from "../../utils/utils";
 import { KafkaClusterMetadataFeatureLevelRecord } from "./kafka_cluster_metadata_feature_level_record";
-import { MetadataRecordType } from "../../consts";
+import { MetadataRecordType } from "../../utils/consts";
 
 export class KafkaClusterMetadataRecordBatchItem {
   constructor(

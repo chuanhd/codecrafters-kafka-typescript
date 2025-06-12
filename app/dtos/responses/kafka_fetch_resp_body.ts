@@ -1,4 +1,4 @@
-import type { IResponseBufferSerializable } from "../../interface_buffer_serializable";
+import type { IResponseBufferSerializable } from "../../models/common/interface_buffer_serializable";
 import { writeVarInt } from "../../utils/utils";
 import type { KafkaFetchTopicItemResp } from "./kafka_fetch_topic_item_resp";
 

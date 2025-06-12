@@ -1,4 +1,4 @@
-import { ResponseType } from "../../consts.ts";
+import { ResponseType } from "../../utils/consts.ts";
 
 class KafkaApiVersionItemBody {
   apiKey: number;

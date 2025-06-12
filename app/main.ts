@@ -1,5 +1,5 @@
 import net from "net";
-import { KafkaRequestHandlerCenter } from "./request_handlers";
+import { KafkaRequestHandlerCenter } from "./models/request_handlers/request_handler_center";
 import { APIVersionRequestHandler } from "./models/request_handlers/api_version_request_handler";
 import { DescribeTopicPartitionRequestHandler } from "./models/request_handlers/describe_topic_partition_request_handler";
 import { FetchRequestHandler } from "./models/request_handlers/fetch_request_handler";

@@ -1,4 +1,4 @@
-import type { IResponseBufferSerializable } from "../../interface_buffer_serializable";
+import type { IResponseBufferSerializable } from "../../models/common/interface_buffer_serializable";
 
 class KafkaResponseHeader implements IResponseBufferSerializable {
   constructor(

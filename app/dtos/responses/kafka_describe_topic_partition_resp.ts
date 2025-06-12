@@ -1,4 +1,4 @@
-import { type IResponseBufferSerializable } from "../../interface_buffer_serializable.ts";
+import { type IResponseBufferSerializable } from "../../models/common/interface_buffer_serializable.ts";
 import type { KafkaTopicPartitionItemResp } from "./kafka_topic_partition_item_resp.ts";
 
 const TagBufferBufferSize = 1; // 1 byte

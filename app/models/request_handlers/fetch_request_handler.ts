@@ -1,4 +1,4 @@
-import { ErrorCode, ResponseType } from "../../consts";
+import { ErrorCode, ResponseType } from "../../utils/consts";
 import { KafkaFetchRequest } from "../../dtos/requests/kafka_fetch_request";
 import { KafkaRequestHeader } from "../../dtos/requests/kafka_request_header";
 import { KafkaFetchResponseBody } from "../../dtos/responses/kafka_fetch_resp_body";
@@ -54,7 +54,7 @@ export class FetchRequestHandler extends IRequestHandler {
       0,
       body
     );
-    
+
     return response;
   }
 }

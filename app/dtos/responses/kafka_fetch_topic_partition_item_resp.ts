@@ -1,5 +1,5 @@
 import { KafkaClusterMetadataTopicRecord } from './../../models/metadata_log_file/kafka_cluster_metadata_topic_record';
-import { ErrorCode } from '../../consts';
+import { ErrorCode } from '../../utils/consts';
 import { KafkaPartitionLogFile } from '../../models/metadata_partition_log_file/kafka_partition_log_file';
 import { KafkaPartitionRecordBatch } from '../../models/metadata_partition_log_file/kafka_partition_record_batch';
 import { UInt16Field, UInt32Field, UInt64Field, UVarIntField, VarIntField } from '../../models/fields/atom_field';

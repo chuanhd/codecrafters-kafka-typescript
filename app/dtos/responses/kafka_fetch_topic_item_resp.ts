@@ -1,4 +1,4 @@
-import type { IResponseBufferSerializable } from "../../interface_buffer_serializable";
+import type { IResponseBufferSerializable } from "../../models/common/interface_buffer_serializable";
 import type { BufferEncode } from "../../models/common/interface_encode";
 import { UVarIntField } from "../../models/fields/atom_field";
 import type { KafkaFetchTopicPartitionItemResp } from "./kafka_fetch_topic_partition_item_resp";

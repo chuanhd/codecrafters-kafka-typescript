@@ -1,4 +1,4 @@
-import { ErrorCode, ResponseType } from "../../consts";
+import { ErrorCode, ResponseType } from "../../utils/consts";
 import { KafkaDescribePartitionRequest } from "../../dtos/requests/kafka_describe_partition_req";
 import { KafkaRequestHeader } from "../../dtos/requests/kafka_request_header";
 import { KafkaDescribeTopicPartitionsRespBody, KafkaDescribeTopicPartitionsTopicItem } from "../../dtos/responses/kafka_describe_topic_partition_resp";

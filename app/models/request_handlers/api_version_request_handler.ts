@@ -1,4 +1,4 @@
-import { ErrorCode, ResponseType } from "../../consts";
+import { ErrorCode, ResponseType } from "../../utils/consts";
 import { KafkaRequestHeader } from "../../dtos/requests/kafka_request_header";
 import { KafkaApiVersionsResponseBody } from "../../dtos/responses/kafka_api_version_resp";
 import { KafkaResponse } from "../../dtos/responses/kafka_response";

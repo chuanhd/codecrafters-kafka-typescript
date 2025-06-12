@@ -1,7 +1,7 @@
 import { KafkaClusterMetadataPartitionRecord } from "../../models/metadata_log_file/kafka_cluster_metadata_partition_record";
-import type { IResponseBufferSerializable } from "../../interface_buffer_serializable";
+import type { IResponseBufferSerializable } from "../../models/common/interface_buffer_serializable";
 import { writeVarInt } from "../../utils/utils";
-import { ErrorCode } from "../../consts";
+import { ErrorCode } from "../../utils/consts";
 
 const ErrorCodeBufferSize = 2; // 2 bytes
 const PartitionIndexBufferSize = 4; // 4 bytes
