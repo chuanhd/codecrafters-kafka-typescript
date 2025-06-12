@@ -23,6 +23,6 @@ export class KafkaRequestHandlerCenter {
       throw new Error(`No handler found for API key: ${apiKey}`);
     }
 
-    return handler.handleRequest(header, request).toBuffer();
+    return handler.handleRequest(header, request).encodeTo();
   }
 }

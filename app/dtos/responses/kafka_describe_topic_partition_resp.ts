@@ -1,4 +1,4 @@
-import { type IResponseBufferSerializable } from "../../models/common/interface_buffer_serializable.ts";
+import type { BufferEncode } from "../../models/common/interface_encode.ts";
 import type { KafkaTopicPartitionItemResp } from "./kafka_topic_partition_item_resp.ts";
 
 const TagBufferBufferSize = 1; // 1 byte
@@ -15,7 +15,7 @@ const PartitionsArrayLengthBufferSize = 1; // 1 byte
 const TopicAuthorizedOpBufferSize = 4; // 4 byte
 
 export class KafkaDescribeTopicPartitionsHeader
-  implements IResponseBufferSerializable
+  implements BufferEncode
 {
   correlationId: number;
   tagBuffer: number;
@@ -27,7 +27,8 @@ export class KafkaDescribeTopicPartitionsHeader
   getBufferSize(): number {
     return TagBufferBufferSize + CorrelationIdBufferSize;
   }
-  toBuffer(): Buffer {
+
+  encodeTo(): Buffer {
     const correlationIdBuffer = Buffer.alloc(CorrelationIdBufferSize);
     correlationIdBuffer.writeUInt32BE(this.correlationId);
 
@@ -39,7 +40,7 @@ export class KafkaDescribeTopicPartitionsHeader
 }
 
 export class KafkaDescribeTopicPartitionsTopicItem
-  implements IResponseBufferSerializable
+  implements BufferEncode
 {
   errorCode: number;
   topicNameLength: number;
@@ -85,7 +86,7 @@ export class KafkaDescribeTopicPartitionsTopicItem
   //   );
   // }
 
-  toBuffer(): Buffer {
+  encodeTo(): Buffer {
     const errorCodeBuffer = Buffer.alloc(ErrorCodeBufferSize);
     errorCodeBuffer.writeUInt16BE(this.errorCode);
 
@@ -105,7 +106,7 @@ export class KafkaDescribeTopicPartitionsTopicItem
 
     // Serialize partitions
     const partitionsBuffers = this.partitions.map((partition) =>
-      partition.toBuffer()
+      partition.encodeTo()
     );
     const partitionsBuffer = Buffer.concat(partitionsBuffers);
     console.log(`partitionsBuffer size: ${partitionsBuffer.length}`);
@@ -131,7 +132,7 @@ export class KafkaDescribeTopicPartitionsTopicItem
 }
 
 export class KafkaDescribeTopicPartitionsRespBody
-  implements IResponseBufferSerializable
+  implements BufferEncode
 {
   throttleTime: number;
   topicsLength: number;
@@ -166,14 +167,14 @@ export class KafkaDescribeTopicPartitionsRespBody
   //   );
   // }
 
-  toBuffer(): Buffer {
+  encodeTo(): Buffer {
     const throttleTimeBuffer = Buffer.alloc(ThrottleTimeBufferSize);
     throttleTimeBuffer.writeUInt8(this.throttleTime);
 
     const topicArrayLengthBuffer = Buffer.alloc(TopicArrayLengthBufferSize);
     topicArrayLengthBuffer.writeUInt8(this.topicsLength);
 
-    const topicBuffers = this.topics.map((e) => e.toBuffer());
+    const topicBuffers = this.topics.map((e) => e.encodeTo());
 
     const cursorBuffer = Buffer.alloc(CursorBufferSize);
     cursorBuffer.writeUInt8(255);

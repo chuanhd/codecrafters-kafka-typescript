@@ -1,9 +1,8 @@
-import type { IResponseBufferSerializable } from "../../models/common/interface_buffer_serializable";
 import type { BufferEncode } from "../../models/common/interface_encode";
 import { UVarIntField } from "../../models/fields/atom_field";
 import type { KafkaFetchTopicPartitionItemResp } from "./kafka_fetch_topic_partition_item_resp";
 
-export class KafkaFetchTopicItemResp implements IResponseBufferSerializable, BufferEncode {
+export class KafkaFetchTopicItemResp implements BufferEncode {
   public numPartitions: UVarIntField;
   public tagBuffer: UVarIntField;
 
@@ -24,9 +23,5 @@ export class KafkaFetchTopicItemResp implements IResponseBufferSerializable, Buf
     const tagBufferBuffer = this.tagBuffer.encode(); // Placeholder for tag buffer
     
     return Buffer.concat([this.topicId, numPartitionsBuffer, partitionsBuffer, tagBufferBuffer]);
-  }
-
-  toBuffer(): Buffer { 
-    return this.encodeTo()
   }
 }

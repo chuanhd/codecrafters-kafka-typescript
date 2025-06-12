@@ -1,6 +1,6 @@
-import type { IResponseBufferSerializable } from "../../models/common/interface_buffer_serializable";
+import type { BufferEncode } from "../../models/common/interface_encode";
 
-class KafkaResponseHeader implements IResponseBufferSerializable {
+class KafkaResponseHeader implements BufferEncode {
   constructor(
     public correlationId: number,
     public tagBuffer: number | undefined = undefined
@@ -11,7 +11,7 @@ class KafkaResponseHeader implements IResponseBufferSerializable {
     return 4 + tagBufferSize; // 4 bytes for correlationId + 1 byte for tagBuffer if exists
   }
 
-  public toBuffer() {
+  public encodeTo() {
     const buffer = Buffer.alloc(4);
     buffer.writeUInt32BE(this.correlationId);
 
@@ -25,22 +25,22 @@ class KafkaResponseHeader implements IResponseBufferSerializable {
   }
 }
 
-export class KafkaResponse {
+export class KafkaResponse implements BufferEncode {
   header: KafkaResponseHeader;
-  body: IResponseBufferSerializable;
+  body: BufferEncode;
 
   constructor(
     correlationId: number,
     tagBuffer: number | undefined,
-    body: IResponseBufferSerializable
+    body: BufferEncode
   ) {
     this.header = new KafkaResponseHeader(correlationId, tagBuffer);
     this.body = body;
   }
 
-  public toBuffer() {
-    const headerBuffer = this.header.toBuffer();
-    const bodyBuffer = this.body.toBuffer();
+  public encodeTo() {
+    const headerBuffer = this.header.encodeTo();
+    const bodyBuffer = this.body.encodeTo();
 
     // Buffer size of `messageSize` value
     const messageSizeBufferSize = 4; // 32 bits = 4 bytes
@@ -53,8 +53,8 @@ export class KafkaResponse {
 
     return Buffer.concat([
       messageSizeBuffer,
-      this.header.toBuffer(),
-      this.body.toBuffer(),
+      headerBuffer,
+      bodyBuffer,
     ]);
   }
 }

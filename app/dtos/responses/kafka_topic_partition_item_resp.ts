@@ -1,7 +1,7 @@
 import { KafkaClusterMetadataPartitionRecord } from "../../models/metadata_log_file/kafka_cluster_metadata_partition_record";
-import type { IResponseBufferSerializable } from "../../models/common/interface_buffer_serializable";
 import { writeVarInt } from "../../utils/utils";
 import { ErrorCode } from "../../utils/consts";
+import type { BufferEncode } from "../../models/common/interface_encode";
 
 const ErrorCodeBufferSize = 2; // 2 bytes
 const PartitionIndexBufferSize = 4; // 4 bytes
@@ -15,7 +15,7 @@ const OfflineReplicasArrayItemBufferSize = 4; // 4 bytes
 const TagBufferBufferSize = 1; // 1 byte
 
 export class KafkaTopicPartitionItemResp
-  implements IResponseBufferSerializable
+  implements BufferEncode
 {
   constructor(
     public errorCode: number,
@@ -48,7 +48,7 @@ export class KafkaTopicPartitionItemResp
     );
   }
 
-  toBuffer(): Buffer {
+  encodeTo(): Buffer {
     // Create buffers for each field and write the values
     const errorCodeBuffer = Buffer.alloc(ErrorCodeBufferSize);
     errorCodeBuffer.writeUInt16BE(this.errorCode);

@@ -1,6 +1,7 @@
+import type { BufferEncode } from "../../models/common/interface_encode.ts";
 import { ResponseType } from "../../utils/consts.ts";
 
-class KafkaApiVersionItemBody {
+class KafkaApiVersionItemBody implements BufferEncode {
   apiKey: number;
   minSupportVersion: number;
   maxSupportVersion: number;
@@ -32,7 +33,7 @@ class KafkaApiVersionItemBody {
     );
   }
 
-  public toBuffer() {
+  public encodeTo() {
     const apiKeyBuffer = Buffer.alloc(KafkaApiVersionItemBody.apiKeyBufferSize);
     apiKeyBuffer.writeUInt16BE(this.apiKey);
 
@@ -64,7 +65,7 @@ class KafkaApiVersionItemBody {
   }
 }
 
-class KafkaApiVersionsArrayBody {
+class KafkaApiVersionsArrayBody implements BufferEncode {
   length: number;
   apiVersionItems: Array<KafkaApiVersionItemBody>;
 
@@ -88,19 +89,19 @@ class KafkaApiVersionsArrayBody {
     );
   }
 
-  public toBuffer() {
+  public encodeTo() {
     const lengthBuffer = Buffer.alloc(1);
     lengthBuffer.writeUInt8(this.length);
 
     console.log("[KafkaApiVersionsArrayBody] length: ", this.length);
 
-    const itemBuffers = this.apiVersionItems.map((item) => item.toBuffer());
+    const itemBuffers = this.apiVersionItems.map((item) => item.encodeTo());
 
     return Buffer.concat([lengthBuffer, ...itemBuffers]);
   }
 }
 
-export class KafkaApiVersionsResponseBody {
+export class KafkaApiVersionsResponseBody implements BufferEncode {
   errorCode: number;
   apiKey: number;
   apiVersion: number;
@@ -167,7 +168,7 @@ export class KafkaApiVersionsResponseBody {
     );
   }
 
-  public toBuffer() {
+  public encodeTo() {
     const errorCodeBuffer = Buffer.alloc(
       KafkaApiVersionsResponseBody.errorCodeBufferSize
     );
@@ -185,7 +186,7 @@ export class KafkaApiVersionsResponseBody {
 
     return Buffer.concat([
       errorCodeBuffer,
-      this.apiVersionsArray.toBuffer(),
+      this.apiVersionsArray.encodeTo(),
       throttleTimeBuffer,
       tagBufferBuffer,
     ]);

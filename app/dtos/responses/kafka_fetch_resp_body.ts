@@ -1,8 +1,8 @@
-import type { IResponseBufferSerializable } from "../../models/common/interface_buffer_serializable";
+import type { BufferEncode } from "../../models/common/interface_encode";
 import { writeVarInt } from "../../utils/utils";
 import type { KafkaFetchTopicItemResp } from "./kafka_fetch_topic_item_resp";
 
-export class KafkaFetchResponseBody implements IResponseBufferSerializable {
+export class KafkaFetchResponseBody implements BufferEncode {
   constructor(
     public throttleTime: number,
     public errorCode: number,
@@ -10,7 +10,7 @@ export class KafkaFetchResponseBody implements IResponseBufferSerializable {
     public topics: KafkaFetchTopicItemResp[]
   ) {}
 
-  toBuffer(): Buffer {
+  encodeTo(): Buffer {
     const throttleTimeBuffer = Buffer.alloc(4);
     throttleTimeBuffer.writeUInt32BE(this.throttleTime);
     const errorCodeBuffer = Buffer.alloc(2);
@@ -20,7 +20,7 @@ export class KafkaFetchResponseBody implements IResponseBufferSerializable {
 
     const numResponsesBuffer = writeVarInt(this.topics.length + 1);
     const topicsBuffer = Buffer.concat(
-      this.topics.map((topic) => topic.toBuffer())
+      this.topics.map((topic) => topic.encodeTo())
     );
     const tagBufferBuffer = writeVarInt(0);
 
