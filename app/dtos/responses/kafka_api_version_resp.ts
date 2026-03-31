@@ -11,7 +11,7 @@ class KafkaApiVersionItemBody implements BufferEncode {
     apiKey: number,
     minSupportVersion: number,
     maxSupportVersion: number,
-    tagBuffer: number
+    tagBuffer: number,
   ) {
     this.apiKey = apiKey;
     this.minSupportVersion = minSupportVersion;
@@ -38,22 +38,22 @@ class KafkaApiVersionItemBody implements BufferEncode {
     apiKeyBuffer.writeUInt16BE(this.apiKey);
 
     const minSupportVersionBuffer = Buffer.alloc(
-      KafkaApiVersionItemBody.minSupportVersionBufferSize
+      KafkaApiVersionItemBody.minSupportVersionBufferSize,
     );
     minSupportVersionBuffer.writeUInt16BE(this.minSupportVersion);
 
     const maxSupportVersionBuffer = Buffer.alloc(
-      KafkaApiVersionItemBody.maxSupportVersionBufferSize
+      KafkaApiVersionItemBody.maxSupportVersionBufferSize,
     );
     maxSupportVersionBuffer.writeUInt16BE(this.maxSupportVersion);
 
     const tagBufferBuffer = Buffer.alloc(
-      KafkaApiVersionItemBody.tagBufferBufferSize
+      KafkaApiVersionItemBody.tagBufferBufferSize,
     );
     tagBufferBuffer.writeUIntBE(
       this.tagBuffer,
       0,
-      KafkaApiVersionItemBody.tagBufferBufferSize
+      KafkaApiVersionItemBody.tagBufferBufferSize,
     );
 
     return Buffer.concat([
@@ -81,7 +81,7 @@ class KafkaApiVersionsArrayBody implements BufferEncode {
       (prev, cur) => {
         return prev + cur.getBufferSize();
       },
-      0
+      0,
     );
 
     return (
@@ -117,20 +117,23 @@ export class KafkaApiVersionsResponseBody implements BufferEncode {
     this.tagBuffer = 0;
 
     switch (this.apiKey) {
-      case ResponseType.NONE:
-        this.apiVersionsArray = new KafkaApiVersionsArrayBody([]);
+      case ResponseType.PRODUCE:
+        const produceItem = new KafkaApiVersionItemBody(0, 0, 11, 0);
+        this.apiVersionsArray = new KafkaApiVersionsArrayBody([produceItem]);
         break;
       case ResponseType.API_VERSIONS:
         {
+          const produceItem = new KafkaApiVersionItemBody(0, 0, 11, 0);
           const apiVersionItem = new KafkaApiVersionItemBody(18, 0, 4, 0);
           const describeTopicPartitionsItem = new KafkaApiVersionItemBody(
             75,
             0,
             0,
-            0
+            0,
           );
           const fetchItem = new KafkaApiVersionItemBody(1, 0, 16, 0);
           this.apiVersionsArray = new KafkaApiVersionsArrayBody([
+            produceItem,
             apiVersionItem,
             describeTopicPartitionsItem,
             fetchItem,
@@ -143,7 +146,7 @@ export class KafkaApiVersionsResponseBody implements BufferEncode {
             75,
             0,
             0,
-            0
+            0,
           );
           this.apiVersionsArray = new KafkaApiVersionsArrayBody([
             describeTopicPartitionsItem,
@@ -170,17 +173,17 @@ export class KafkaApiVersionsResponseBody implements BufferEncode {
 
   public encodeTo() {
     const errorCodeBuffer = Buffer.alloc(
-      KafkaApiVersionsResponseBody.errorCodeBufferSize
+      KafkaApiVersionsResponseBody.errorCodeBufferSize,
     );
     errorCodeBuffer.writeUInt16BE(this.errorCode);
 
     const throttleTimeBuffer = Buffer.alloc(
-      KafkaApiVersionsResponseBody.throttleTimeBufferSize
+      KafkaApiVersionsResponseBody.throttleTimeBufferSize,
     );
     throttleTimeBuffer.writeUInt32BE(this.throttleTime);
 
     const tagBufferBuffer = Buffer.alloc(
-      KafkaApiVersionsResponseBody.tagBufferBufferSize
+      KafkaApiVersionsResponseBody.tagBufferBufferSize,
     );
     tagBufferBuffer.writeUInt8(this.tagBuffer);
 

@@ -1,8 +1,13 @@
-import { UInt16Field, UInt32Field, UInt64Field, UInt8Field } from './../fields/atom_field';
+import {
+  UInt16Field,
+  UInt32Field,
+  UInt64Field,
+  UInt8Field,
+} from "./../fields/atom_field";
 import { crc32c } from "../../utils/utils";
 import { Wrapper, type Offset } from "../wrapper";
 import { KafkaPartitionRecordItem } from "./kafka_partition_record_item";
-import type { BufferDecode, BufferEncode } from '../common/interface_encode';
+import type { BufferDecode, BufferEncode } from "../common/interface_encode";
 
 export class KafkaPartitionRecordBatch implements BufferEncode, BufferDecode {
   public baseOffset: UInt64Field;
@@ -38,7 +43,7 @@ export class KafkaPartitionRecordBatch implements BufferEncode, BufferDecode {
   }
 
   encodeTo(): Buffer {
-    const buffers = []
+    const buffers = [];
     buffers.push(this.baseOffset.encode());
     buffers.push(this.batchLength.encode());
     buffers.push(this.partitionLeaderEpoch.encode());
@@ -54,7 +59,7 @@ export class KafkaPartitionRecordBatch implements BufferEncode, BufferDecode {
     buffers.push(this.recordCount.encode());
 
     const recordBatchItemsBuffers = this.recordBatchItems.map((item) =>
-      item.encode()
+      item.encode(),
     );
 
     buffers.push(...recordBatchItemsBuffers);
@@ -120,11 +125,8 @@ export class KafkaPartitionRecordBatch implements BufferEncode, BufferDecode {
     for (let i = 0; i < this.recordCount.value; i++) {
       const reportBatchItem = new KafkaPartitionRecordItem();
       const offsetWrapper = new Wrapper<number>(0);
-      reportBatchItem.decode(
-        buffer.subarray(currentOffset),
-        offsetWrapper
-      );
-      currentOffset += offsetWrapper.value; 
+      reportBatchItem.decode(buffer.subarray(currentOffset), offsetWrapper);
+      currentOffset += offsetWrapper.value;
       this.recordBatchItems.push(reportBatchItem);
     }
 
